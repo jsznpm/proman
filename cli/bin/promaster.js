@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { runList } from "../src/commands/list.js";
 import { HttpError } from "../src/github.js";
+import { printBanner } from "../src/banner.js";
 
 const USAGE = `promaster - browse & download Markdown from a GitHub repo
 
@@ -12,6 +13,7 @@ Config:
   GITHUB_TOKEN=...            Optional, raises the GitHub API rate limit.`;
 
 async function main() {
+  printBanner();
   const cmd = process.argv[2];
   switch (cmd) {
     case "list":

@@ -1,6 +1,6 @@
 {
   "name": "promaster",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "description": "Interactive CLI to browse and download Markdown (blog/memory/books) from a public GitHub repo.",
   "type": "module",
   "bin": {
