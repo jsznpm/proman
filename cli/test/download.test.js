@@ -12,8 +12,8 @@ test("safeName strips path traversal and slashes", () => {
   assert.throws(() => safeName(".."));
 });
 
-test("save writes under ./proman-data/<category>/<name> and creates dirs", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "proman-"));
+test("save writes under ./promaster-data/<category>/<name> and creates dirs", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "promaster-"));
   const cwd = process.cwd();
   process.chdir(dir);
   try {

@@ -1,5 +1,5 @@
 # Never publish downloaded content or local cruft.
-proman-data/
+promaster-data/
 test/
 .claude/
 *.log

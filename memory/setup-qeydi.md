@@ -1,5 +1,5 @@
 # Setup qeydi
 
-proman CLI `cli/` folderinde. Content (blog/memory/books) repo kokunde.
+promaster CLI `cli/` folderinde. Content (blog/memory/books) repo kokunde.
 
-`proman list` -> kateqoriya sec -> fayl(lar) sec -> `./proman-data/<category>/`-e yuklenir.
+`promaster list` -> kateqoriya sec -> fayl(lar) sec -> `./promaster-data/<category>/`-e yuklenir.

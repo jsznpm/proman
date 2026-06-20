@@ -3,7 +3,7 @@ const API = "https://api.github.com";
 function headers({ token }) {
   const h = {
     Accept: "application/vnd.github+json",
-    "User-Agent": "proman-cli",
+    "User-Agent": "promaster-cli",
   };
   if (token) h.Authorization = `Bearer ${token}`;
   return h;

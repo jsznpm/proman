@@ -2,14 +2,14 @@
 import { runList } from "../src/commands/list.js";
 import { HttpError } from "../src/github.js";
 
-const USAGE = `proman - browse & download Markdown from a GitHub repo
+const USAGE = `promaster - browse & download Markdown from a GitHub repo
 
 Usage:
-  proman list      Pick a category (blog/memory/books), then file(s) to download.
+  promaster list      Pick a category (blog/memory/books), then file(s) to download.
 
 Config:
-  PROMAN_REPO=owner/repo   Source repo (or "proman".repo in package.json).
-  GITHUB_TOKEN=...         Optional, raises the GitHub API rate limit.`;
+  PROMASTER_REPO=owner/repo   Source repo (or "promaster".repo in package.json).
+  GITHUB_TOKEN=...            Optional, raises the GitHub API rate limit.`;
 
 async function main() {
   const cmd = process.argv[2];

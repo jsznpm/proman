@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 
-export const OUTPUT_ROOT = "proman-data";
+export const OUTPUT_ROOT = "promaster-data";
 
 /**
  * Sanitize a GitHub file name to a safe basename (no traversal, no slashes).
@@ -15,7 +15,7 @@ export function safeName(name) {
 }
 
 /**
- * Save raw content under ./proman-data/<category>/<name>. Returns absolute path.
+ * Save raw content under ./promaster-data/<category>/<name>. Returns absolute path.
  */
 export async function save(category, file, content) {
   const dir = resolve(process.cwd(), OUTPUT_ROOT, safeName(category));
