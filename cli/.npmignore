@@ -1,0 +1,6 @@
+# Never publish downloaded content or local cruft.
+proman-data/
+test/
+.claude/
+*.log
+.DS_Store

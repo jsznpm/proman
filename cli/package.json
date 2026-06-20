@@ -1,0 +1,32 @@
+{
+  "name": "proman",
+  "version": "0.1.0",
+  "description": "Interactive CLI to browse and download Markdown (blog/memory/books) from a public GitHub repo.",
+  "type": "module",
+  "bin": {
+    "proman": "./bin/proman.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "cli",
+    "markdown",
+    "github",
+    "blog",
+    "notes"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@inquirer/prompts": "^7.0.0"
+  }
+}
