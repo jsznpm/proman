@@ -1,8 +1,9 @@
-import { select, checkbox } from "@inquirer/prompts";
+import { select, checkbox, confirm } from "@inquirer/prompts";
 import { resolve, dirname } from "node:path";
 import { resolveRepo, CATEGORIES } from "../config.js";
 import { listMarkdown, lastCommitDate, fetchRaw, HttpError } from "../github.js";
 import { save, OUTPUT_ROOT } from "../download.js";
+import { openInBrowser } from "../open.js";
 
 const CONCURRENCY = 5;
 
@@ -59,9 +60,17 @@ export async function runList() {
     saved.push(await save(category, file, content));
   }
 
-  console.log("\nSaved:");
+  console.log("\nSaved (HTML — click to open in a browser):");
   for (const p of saved) console.log(`  ${p}`);
   console.log(`\nOutput dir: ${resolve(process.cwd(), OUTPUT_ROOT, category)}`);
+
+  const open = await confirm({
+    message: `Open ${saved.length === 1 ? "it" : "them"} in your browser now?`,
+    default: true,
+  });
+  if (open) {
+    for (const p of saved) openInBrowser(p);
+  }
 }
 
 export { HttpError };

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { save, safeName, OUTPUT_ROOT } from "../src/download.js";
+import { save, safeName, htmlName, OUTPUT_ROOT } from "../src/download.js";
 
 test("safeName strips path traversal and slashes", () => {
   assert.equal(safeName("a.md"), "a.md");
@@ -12,14 +12,24 @@ test("safeName strips path traversal and slashes", () => {
   assert.throws(() => safeName(".."));
 });
 
-test("save writes under ./promaster-data/<category>/<name> and creates dirs", async () => {
+test("htmlName replaces the extension with .html", () => {
+  assert.equal(htmlName("a.md"), "a.html");
+  assert.equal(htmlName("sub/dir/x.md"), "x.html");
+  assert.equal(htmlName("noext"), "noext.html");
+  assert.equal(htmlName("../../etc/passwd"), "passwd.html");
+});
+
+test("save renders markdown to ./promaster-data/<category>/<name>.html", async () => {
   const dir = await mkdtemp(join(tmpdir(), "promaster-"));
   const cwd = process.cwd();
   process.chdir(dir);
   try {
     const dest = await save("blog", { name: "hello.md" }, "# hi");
-    assert.equal(dest, resolve(dir, OUTPUT_ROOT, "blog", "hello.md"));
-    assert.equal(await readFile(dest, "utf8"), "# hi");
+    assert.equal(dest, resolve(dir, OUTPUT_ROOT, "blog", "hello.html"));
+    const html = await readFile(dest, "utf8");
+    assert.match(html, /<!DOCTYPE html>/);
+    assert.match(html, /<h1[^>]*>hi<\/h1>/);
+    assert.match(html, /<title>hello<\/title>/);
   } finally {
     process.chdir(cwd);
     await rm(dir, { recursive: true, force: true });

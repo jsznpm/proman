@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { basename, resolve } from "node:path";
+import { basename, extname, resolve } from "node:path";
+import { mdToHtml } from "./render.js";
 
 export const OUTPUT_ROOT = "promaster-data";
 
@@ -15,12 +16,27 @@ export function safeName(name) {
 }
 
 /**
- * Save raw content under ./promaster-data/<category>/<name>. Returns absolute path.
+ * Safe basename with its extension replaced by ".html".
+ */
+export function htmlName(name) {
+  const base = safeName(name);
+  const ext = extname(base);
+  const stem = ext ? base.slice(0, -ext.length) : base;
+  return `${stem}.html`;
+}
+
+/**
+ * Render markdown to a styled HTML document and save it under
+ * ./promaster-data/<category>/<name>.html. Returns the absolute path.
  */
 export async function save(category, file, content) {
   const dir = resolve(process.cwd(), OUTPUT_ROOT, safeName(category));
   await mkdir(dir, { recursive: true });
-  const dest = resolve(dir, safeName(file.name));
-  await writeFile(dest, content, "utf8");
+  const base = safeName(file.name);
+  const ext = extname(base);
+  const title = ext ? base.slice(0, -ext.length) : base;
+  const html = mdToHtml(content, { title });
+  const dest = resolve(dir, htmlName(file.name));
+  await writeFile(dest, html, "utf8");
   return dest;
 }

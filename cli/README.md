@@ -1,7 +1,8 @@
 # promaster
 
-Interactive CLI to browse and download Markdown from a **public GitHub repo**,
-grouped into three categories: **blog**, **memory**, **books**.
+Interactive CLI to browse Markdown from a **public GitHub repo**, grouped into
+three categories: **blog**, **memory**, **books**. Each selected file is
+rendered to a styled, standalone **HTML** page — click it to open in a browser.
 
 The package ships only the CLI. Your Markdown content lives in your own GitHub
 repo and is fetched at runtime — it is never bundled into npm.
@@ -32,7 +33,12 @@ promaster list
 1. Pick a category: `blog` / `memory` / `books`.
 2. Files are listed newest → oldest (by last git commit date).
 3. Toggle one or more with space, confirm with enter.
-4. Selected files download to `./promaster-data/<category>/`, where your app reads them.
+4. Each selection is converted to HTML and saved to
+   `./promaster-data/<category>/<name>.html`.
+5. The CLI then offers to open the saved file(s) in your default browser.
+
+Open any saved `.html` later by double-clicking it — it renders fully offline
+(styles are inlined, with light/dark support).
 
 ## Configuration
 
