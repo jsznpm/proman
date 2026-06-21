@@ -1,5 +1,6 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { basename, extname, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { mdToHtml } from "./render.js";
 
 export const OUTPUT_ROOT = "promaster-data";
@@ -39,4 +40,20 @@ export async function save(category, file, content) {
   const dest = resolve(dir, htmlName(file.name));
   await writeFile(dest, html, "utf8");
   return dest;
+}
+
+/**
+ * Render markdown to HTML in a fresh OS temp directory (never under
+ * promaster-data). Returns { path, dir } so the caller can delete `dir`
+ * once the user is done viewing — nothing is persisted.
+ */
+export async function saveTemp(file, content) {
+  const dir = await mkdtemp(resolve(tmpdir(), "promaster-"));
+  const base = safeName(file.name);
+  const ext = extname(base);
+  const title = ext ? base.slice(0, -ext.length) : base;
+  const html = mdToHtml(content, { title });
+  const path = resolve(dir, htmlName(file.name));
+  await writeFile(path, html, "utf8");
+  return { path, dir };
 }

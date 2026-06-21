@@ -1,8 +1,10 @@
-import { select, checkbox, confirm } from "@inquirer/prompts";
+import { select, checkbox, confirm, input } from "@inquirer/prompts";
 import { resolve, dirname } from "node:path";
+import { rmSync } from "node:fs";
+import { rm } from "node:fs/promises";
 import { resolveRepo, CATEGORIES } from "../config.js";
 import { listMarkdown, lastCommitDate, fetchRaw, HttpError } from "../github.js";
-import { save, OUTPUT_ROOT } from "../download.js";
+import { save, saveTemp, OUTPUT_ROOT } from "../download.js";
 import { openInBrowser } from "../open.js";
 
 const CONCURRENCY = 5;
@@ -54,6 +56,12 @@ export async function runList() {
     return;
   }
 
+  // books: open immediately, never persist — delete the temp files on exit.
+  if (category === "books") {
+    await openEphemeral(picked, ctx);
+    return;
+  }
+
   const saved = [];
   for (const file of picked) {
     const content = await fetchRaw(file.download_url, ctx);
@@ -70,6 +78,49 @@ export async function runList() {
   });
   if (open) {
     for (const p of saved) openInBrowser(p);
+  }
+}
+
+// Render picks to OS temp, auto-open in the browser, then delete once the
+// user is done (Enter) or aborts (Ctrl+C). Nothing is left on disk.
+async function openEphemeral(picked, ctx) {
+  const dirs = [];
+  const cleanup = () => {
+    while (dirs.length) {
+      try {
+        rmSync(dirs.pop(), { recursive: true, force: true });
+      } catch {
+        /* best effort */
+      }
+    }
+  };
+
+  const onSigint = () => {
+    cleanup();
+    process.exit(130);
+  };
+  process.on("SIGINT", onSigint);
+
+  try {
+    for (const file of picked) {
+      const content = await fetchRaw(file.download_url, ctx);
+      const { path, dir } = await saveTemp(file, content);
+      dirs.push(dir);
+      openInBrowser(path);
+      console.log(`Opened in browser: ${file.name}`);
+    }
+
+    console.log("\nThese are temporary — nothing is saved to disk.");
+    await input({
+      message: `Press Enter when you're done to delete the temporary file${
+        picked.length === 1 ? "" : "s"
+      }`,
+    });
+  } finally {
+    process.off("SIGINT", onSigint);
+    for (const dir of dirs.splice(0)) {
+      await rm(dir, { recursive: true, force: true }).catch(() => {});
+    }
   }
 }
 

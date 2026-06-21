@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { save, safeName, htmlName, OUTPUT_ROOT } from "../src/download.js";
+import { save, saveTemp, safeName, htmlName, OUTPUT_ROOT } from "../src/download.js";
 
 test("safeName strips path traversal and slashes", () => {
   assert.equal(safeName("a.md"), "a.md");
@@ -32,6 +32,20 @@ test("save renders markdown to ./promaster-data/<category>/<name>.html", async (
     assert.match(html, /<title>hello<\/title>/);
   } finally {
     process.chdir(cwd);
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("saveTemp renders HTML into a fresh OS temp dir (not promaster-data)", async () => {
+  const { path, dir } = await saveTemp({ name: "war-and-peace.md" }, "# War");
+  try {
+    assert.ok(path.startsWith(tmpdir()), "path should live under the OS temp dir");
+    assert.ok(path.endsWith("war-and-peace.html"));
+    assert.equal(resolve(dir), resolve(join(path, "..")));
+    const html = await readFile(path, "utf8");
+    assert.match(html, /<!DOCTYPE html>/);
+    assert.match(html, /<h1[^>]*>War<\/h1>/);
+  } finally {
     await rm(dir, { recursive: true, force: true });
   }
 });
