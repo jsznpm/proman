@@ -1,10 +1,9 @@
-import { select, checkbox, confirm, input } from "@inquirer/prompts";
-import { resolve, dirname } from "node:path";
+import { select, checkbox, input } from "@inquirer/prompts";
 import { rmSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { resolveRepo, CATEGORIES } from "../config.js";
 import { listMarkdown, lastCommitDate, fetchRaw, HttpError } from "../github.js";
-import { save, saveTemp, OUTPUT_ROOT } from "../download.js";
+import { saveTemp } from "../download.js";
 import { openInBrowser } from "../open.js";
 
 const CONCURRENCY = 5;
@@ -56,29 +55,8 @@ export async function runList() {
     return;
   }
 
-  // books: open immediately, never persist — delete the temp files on exit.
-  if (category === "books") {
-    await openEphemeral(picked, ctx);
-    return;
-  }
-
-  const saved = [];
-  for (const file of picked) {
-    const content = await fetchRaw(file.download_url, ctx);
-    saved.push(await save(category, file, content));
-  }
-
-  console.log("\nSaved (HTML — click to open in a browser):");
-  for (const p of saved) console.log(`  ${p}`);
-  console.log(`\nOutput dir: ${resolve(process.cwd(), OUTPUT_ROOT, category)}`);
-
-  const open = await confirm({
-    message: `Open ${saved.length === 1 ? "it" : "them"} in your browser now?`,
-    default: true,
-  });
-  if (open) {
-    for (const p of saved) openInBrowser(p);
-  }
+  // All categories open immediately, never persist — temp files deleted on exit.
+  await openEphemeral(picked, ctx);
 }
 
 // Render picks to OS temp, auto-open in the browser, then delete once the
