@@ -1,6 +1,6 @@
 {
   "name": "promaster",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Interactive CLI to browse Markdown (blog/memory/books) from a public GitHub repo and save it as browser-ready HTML.",
   "type": "module",
   "bin": {
