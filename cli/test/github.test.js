@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { listMarkdown, lastCommitDate } from "../src/github.js";
+import { listMarkdown, lastCommitDate, listFolders } from "../src/github.js";
 
 const ctx = { owner: "o", repo: "r", token: null };
 
@@ -45,6 +45,36 @@ test("listMarkdown returns [] on 404 folder", async () => {
   );
   try {
     assert.deepEqual(await listMarkdown("missing", ctx), []);
+  } finally {
+    restore();
+  }
+});
+
+test("listFolders keeps dirs, drops files/dot-folders/excluded, sorts", async () => {
+  const restore = mockFetch(async () =>
+    jsonResponse([
+      { type: "dir", name: "memory", path: "memory" },
+      { type: "dir", name: "blog", path: "blog" },
+      { type: "file", name: "README.md", path: "README.md" },
+      { type: "dir", name: "cli", path: "cli" },
+      { type: "dir", name: ".github", path: ".github" },
+      { type: "dir", name: "books", path: "books" },
+    ])
+  );
+  try {
+    const folders = await listFolders(ctx, { exclude: ["cli"] });
+    assert.deepEqual(folders.map((f) => f.name), ["blog", "books", "memory"]);
+  } finally {
+    restore();
+  }
+});
+
+test("listFolders returns [] on 404", async () => {
+  const restore = mockFetch(async () =>
+    jsonResponse({ message: "Not Found" }, { status: 404, statusText: "Not Found" })
+  );
+  try {
+    assert.deepEqual(await listFolders(ctx), []);
   } finally {
     restore();
   }

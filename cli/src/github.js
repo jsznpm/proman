@@ -41,6 +41,30 @@ async function request(url, ctx) {
 }
 
 /**
+ * List top-level directories of the repo, sorted alphabetically.
+ * Skips dot-folders and any names in `exclude`.
+ * Returns [{ name, path }].
+ */
+export async function listFolders(ctx, { exclude = [] } = {}) {
+  const url = `${API}/repos/${ctx.owner}/${ctx.repo}/contents/`;
+  let res;
+  try {
+    res = await request(url, ctx);
+  } catch (err) {
+    if (err instanceof HttpError && err.status === 404) return [];
+    throw err;
+  }
+  const items = await res.json();
+  if (!Array.isArray(items)) return [];
+  const skip = new Set(exclude);
+  return items
+    .filter((it) => it.type === "dir")
+    .filter((it) => !it.name.startsWith(".") && !skip.has(it.name))
+    .map((it) => ({ name: it.name, path: it.path }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
  * List .md files in a top-level category folder of the repo.
  * Returns [{ name, path, download_url }].
  */

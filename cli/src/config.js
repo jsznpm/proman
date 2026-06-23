@@ -4,7 +4,9 @@ import { resolve } from "node:path";
 // Default content repo (this git repo). Override with PROMASTER_REPO if the repo name differs.
 const DEFAULT_REPO = "jsznpm/proman";
 
-export const CATEGORIES = ["blog", "memory", "books"];
+// Top-level folders never shown as content categories (the CLI's own source).
+// Dot-folders (.git, .github, ...) are skipped separately by listFolders.
+export const EXCLUDED_FOLDERS = ["cli"];
 
 function parseRepo(value) {
   if (typeof value !== "string") return null;
