@@ -10,6 +10,21 @@ repo and is fetched at runtime — it is never bundled into npm.
 
 ## Install
 
+### Standalone binary (no Node.js required)
+
+Download the file for your OS, then run it directly:
+
+| OS | Download | Run |
+|----|----------|-----|
+| Windows x64 | [promaster-win.exe](https://github.com/jsznpm/proman/releases/latest/download/promaster-win.exe) | `.\promaster-win.exe list` |
+| macOS (Apple Silicon) | [promaster-mac-arm64](https://github.com/jsznpm/proman/releases/latest/download/promaster-mac-arm64) | `chmod +x promaster-mac-arm64 && ./promaster-mac-arm64 list` |
+| macOS (Intel) | [promaster-mac-x64](https://github.com/jsznpm/proman/releases/latest/download/promaster-mac-x64) | `chmod +x promaster-mac-x64 && ./promaster-mac-x64 list` |
+| Linux x64 | [promaster-linux](https://github.com/jsznpm/proman/releases/latest/download/promaster-linux) | `chmod +x promaster-linux && ./promaster-linux list` |
+
+> macOS: on first launch Gatekeeper may block it — System Settings → Privacy & Security → **Open Anyway**, or `xattr -d com.apple.quarantine promaster-mac-arm64`.
+
+### Via npm (requires Node.js ≥ 18)
+
 ```bash
 npm install -g promaster
 ```

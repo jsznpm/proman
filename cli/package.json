@@ -13,7 +13,12 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "build:win": "bun build ./bin/promaster.js --compile --target=bun-windows-x64 --outfile dist/promaster-win.exe",
+    "build:mac": "bun build ./bin/promaster.js --compile --target=bun-darwin-arm64 --outfile dist/promaster-mac-arm64",
+    "build:mac-intel": "bun build ./bin/promaster.js --compile --target=bun-darwin-x64 --outfile dist/promaster-mac-x64",
+    "build:linux": "bun build ./bin/promaster.js --compile --target=bun-linux-x64 --outfile dist/promaster-linux",
+    "build:all": "bun run build:win && bun run build:mac && bun run build:mac-intel && bun run build:linux"
   },
   "engines": {
     "node": ">=18"
