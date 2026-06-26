@@ -8,6 +8,14 @@ const DEFAULT_REPO = "jsznpm/proman";
 // Dot-folders (.git, .github, ...) are skipped separately by listFolders.
 export const EXCLUDED_FOLDERS = ["cli"];
 
+// Folder whose files hold a podcast link instead of Markdown to render.
+// Selecting such a file opens its link straight in the browser.
+export const PODCAST_FOLDER = "podcast";
+
+export function isPodcastFolder(name) {
+  return name.toLowerCase() === PODCAST_FOLDER;
+}
+
 function parseRepo(value) {
   if (typeof value !== "string") return null;
   const match = value.trim().match(/^([^/\s]+)\/([^/\s]+)$/);

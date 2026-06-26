@@ -2,7 +2,8 @@ import { spawn } from "node:child_process";
 import { platform } from "node:process";
 
 /**
- * Open a file/path in the OS default application (browser for .html).
+ * Open a file path OR a URL in the OS default application (browser for
+ * .html and http(s) links).
  * Non-blocking and best-effort: failures are reported but never throw.
  */
 export function openInBrowser(filePath) {

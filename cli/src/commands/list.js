@@ -1,7 +1,7 @@
 import { select, checkbox, input } from "@inquirer/prompts";
 import { rmSync } from "node:fs";
 import { rm } from "node:fs/promises";
-import { resolveRepo, EXCLUDED_FOLDERS } from "../config.js";
+import { resolveRepo, EXCLUDED_FOLDERS, isPodcastFolder } from "../config.js";
 import { listFolders, listMarkdown, lastCommitDate, fetchRaw, HttpError } from "../github.js";
 import { createPaginator, navChoices, NAV } from "../pagination.js";
 import { saveTemp } from "../download.js";
@@ -118,7 +118,11 @@ async function browseFolder(folder, ctx) {
     else if (navHit === NAV.PREV) pager.prev();
     else if (navHit === NAV.BACK) return;
     else if (selected.size > 0) {
-      await openEphemeral([...selected.values()], ctx);
+      if (isPodcastFolder(folder.name)) {
+        await openPodcastLinks([...selected.values()], ctx);
+      } else {
+        await openEphemeral([...selected.values()], ctx);
+      }
       return;
     } else {
       console.log("Nothing selected.");
@@ -167,6 +171,28 @@ async function openEphemeral(picked, ctx) {
     for (const dir of dirs.splice(0)) {
       await rm(dir, { recursive: true, force: true }).catch(() => {});
     }
+  }
+}
+
+// First http(s) URL in the file. Handles a bare URL or a Markdown link
+// like [title](https://...). Returns null if none found.
+export function extractUrl(content) {
+  const match = content.match(/https?:\/\/[^\s)<>"']+/);
+  return match ? match[0] : null;
+}
+
+// Podcast files store a link, not Markdown to render. Fetch each pick,
+// pull its URL, and open it straight in the browser. Nothing hits disk.
+async function openPodcastLinks(picked, ctx) {
+  for (const file of picked) {
+    const content = await fetchRaw(file.download_url, ctx);
+    const url = extractUrl(content);
+    if (!url) {
+      console.log(`No link found in ${file.name}`);
+      continue;
+    }
+    openInBrowser(url);
+    console.log(`Opened in browser: ${file.name} → ${url}`);
   }
 }
 
