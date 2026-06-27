@@ -82,6 +82,168 @@ function run() {
 - **`EmployeeFactory` və `VendorFactory`** — iki konkret fabrikdir. Hər biri `create(name)` metodu ilə öz məhsulunu qaytarır.
 - **`run()`** — müştəri kod. Hər iki fabrikdən obyektlər yaradılır və `persons` massivinə yığılır. Sonra dövrdə hər bir obyektin `say()` metodu çağırılır — müştəri obyektin konkret tipini bilmədən onlarla **eyni cür** işləyir.
 
+## ES6 `class` Məntiqi (MDN + javascript.info)
+
+Dofactory nümunəsi köhnə üslubda — **konstruktor funksiyaları** (`function Employee(){}`) ilə yazılıb. Müasir JavaScript-də (ES6+) eyni iş **`class`** açar sözü ilə daha təmiz görünür. `class` — prototip əsaslı vərəsəliyin üstündə **sintaksis şəkəridir** (syntactic sugar), amma əlavə qaydalar gətirir.
+
+### `class` vs `function` konstruktor — fərqlər
+
+- **`new` məcburidir** — class adi funksiya kimi `new`-siz çağırıla bilməz.
+- **Metodlar prototip üzərindədir** — bütün instansiyalar paylaşır, `for...in`-də görünmür (non-enumerable).
+- **Strict mode** — class daxili kod avtomatik `"use strict"` rejimində işləyir.
+- **Hoisting yoxdur** — `let`/`const` kimi temporal dead zone qaydasına tabedir.
+- **`#` ilə private sahələr** — xaricdən əlçatmaz olan gizli sahələr.
+
+### Əsas sintaksis
+
+```javascript
+class Rectangle {
+    constructor(height, width) {  // new ilə avtomatik işə düşür
+        this.height = height;
+        this.width = width;
+    }
+
+    calcArea() {                  // instance metodu (prototipdə)
+        return this.height * this.width;
+    }
+
+    get area() {                  // getter
+        return this.calcArea();
+    }
+
+    static displayName = "Rectangle";  // static sahə (class özündə, instansiyada yox)
+}
+
+const sq = new Rectangle(10, 10);
+console.log(sq.area);            // 100
+```
+
+### Vərəsəlik — `extends` və `super`
+
+```javascript
+class Animal {
+    constructor(name) {
+        this.name = name;
+    }
+    speak() {
+        console.log(`${this.name} makes a noise.`);
+    }
+}
+
+class Dog extends Animal {
+    constructor(name) {
+        super(name);             // valideyn konstruktoru çağır
+    }
+    speak() {
+        super.speak();           // valideyn metodunu çağır
+        console.log(`${this.name} barks.`);
+    }
+}
+
+new Dog("Mitzie").speak();
+// Mitzie makes a noise.
+// Mitzie barks.
+```
+
+> **Vacib qayda:** subclass-da `constructor` varsa, `this`-dən istifadədən **əvvəl** mütləq `super()` çağırılmalıdır.
+
+### Abstract Factory — `class` ilə yenidən yazılmış versiya
+
+Yuxarıdakı dofactory nümunəsinin `class` ekvivalenti:
+
+```javascript
+// Products
+class Employee {
+    constructor(name) {
+        this.name = name;
+    }
+    say() {
+        console.log("I am employee " + this.name);
+    }
+}
+
+class Vendor {
+    constructor(name) {
+        this.name = name;
+    }
+    say() {
+        console.log("I am vendor " + this.name);
+    }
+}
+
+// Factories
+class EmployeeFactory {
+    create(name) {
+        return new Employee(name);
+    }
+}
+
+class VendorFactory {
+    create(name) {
+        return new Vendor(name);
+    }
+}
+
+// Client
+function run() {
+    const persons = [];
+    const employeeFactory = new EmployeeFactory();
+    const vendorFactory = new VendorFactory();
+
+    persons.push(employeeFactory.create("Joan DiSilva"));
+    persons.push(employeeFactory.create("Tim O'Neill"));
+    persons.push(vendorFactory.create("Gerald Watson"));
+    persons.push(vendorFactory.create("Nicole McNight"));
+
+    persons.forEach(p => p.say());
+}
+
+run();
+```
+
+### Daha da irəli — ortaq `abstract` baza ilə
+
+JavaScript-də həqiqi abstract class yoxdur, amma baza class + xəta atmaqla təqlid etmək olar. Bu, dofactory-nin "AbstractFactory/AbstractProduct JS-də istifadə olunmur" qeydinə alternativ yanaşmadır:
+
+```javascript
+class Person {
+    constructor(name) {
+        if (new.target === Person) {
+            throw new Error("Person abstract-dır, birbaşa yaradıla bilməz");
+        }
+        this.name = name;
+    }
+    say() {
+        throw new Error("say() override edilməlidir");
+    }
+}
+
+class Employee extends Person {
+    say() { console.log("I am employee " + this.name); }
+}
+
+class Vendor extends Person {
+    say() { console.log("I am vendor " + this.name); }
+}
+
+// Ortaq fabrik interfeysi
+class Factory {
+    create(name) {
+        throw new Error("create() override edilməlidir");
+    }
+}
+
+class EmployeeFactory extends Factory {
+    create(name) { return new Employee(name); }
+}
+
+class VendorFactory extends Factory {
+    create(name) { return new Vendor(name); }
+}
+```
+
+Burada `Person` və `Factory` **AbstractProduct** və **AbstractFactory** rolunu oynayır — `extends` ilə interfeys məcburiyyəti `class` mexanizmi tərəfindən təmin olunur (köhnə üslubda bunu developer əl ilə saxlamalı idi).
+
 ## Xülasə
 
 - **Abstract Factory** — ümumi mövzu ilə bağlı obyektləri yaradan yaradıcı patterndir.
