@@ -10,3 +10,5 @@
 ### AZERBAYCAN DILINDE
 1 - Sistem dizayn : https://rss.com/podcasts/sistem-dizayn/2946092/
 2 - Meta texniki interviyu mərhələsində bizdən nə gözləyir? : https://javidsalimov.substack.com/p/meta-texniki-interviyu-mrhlsind-bizdn
+
+3 - Algoritmlerin xeyri -  https://javidsalimov.substack.com/p/alqoritmik-oyrnmnin-hmiyyti
