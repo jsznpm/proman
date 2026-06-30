@@ -1,0 +1,48 @@
+{
+  "name": "promaster-tui",
+  "version": "1.0.0",
+  "description": "Full-screen TUI (ink) to browse Markdown from a public GitHub repo, preview it in the terminal, and open it in the browser.",
+  "type": "module",
+  "bin": {
+    "promaster2": "./bin/promaster2.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "build:win": "bun build ./bin/promaster2.js --compile --target=bun-windows-x64 --outfile dist/promaster2-win.exe",
+    "build:mac": "bun build ./bin/promaster2.js --compile --target=bun-darwin-arm64 --outfile dist/promaster2-mac-arm64",
+    "build:mac-intel": "bun build ./bin/promaster2.js --compile --target=bun-darwin-x64 --outfile dist/promaster2-mac-x64",
+    "build:linux": "bun build ./bin/promaster2.js --compile --target=bun-linux-x64 --outfile dist/promaster2-linux",
+    "build:all": "bun run build:win && bun run build:mac && bun run build:mac-intel && bun run build:linux"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "cli",
+    "tui",
+    "ink",
+    "markdown",
+    "github"
+  ],
+  "license": "MIT",
+  "promaster": {
+    "repo": "jsznpm/proman"
+  },
+  "dependencies": {
+    "htm": "^3.1.1",
+    "ink": "^5.2.1",
+    "ink-spinner": "^5.0.0",
+    "marked": "^14.0.0",
+    "marked-terminal": "^7.3.0",
+    "react": "^18.3.1",
+    "react-devtools-core": "^4.28.5"
+  },
+  "devDependencies": {
+    "ink-testing-library": "^4.0.0"
+  }
+}
