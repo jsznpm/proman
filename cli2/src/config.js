@@ -27,7 +27,7 @@ function fromPackageJson() {
   try {
     const raw = readFileSync(resolve(process.cwd(), "package.json"), "utf8");
     const pkg = JSON.parse(raw);
-    return pkg?.promaster?.repo ?? null;
+    return pkg?.ubuligan?.repo ?? null;
   } catch {
     return null;
   }
@@ -36,7 +36,7 @@ function fromPackageJson() {
 /**
  * Resolve the source repo in priority order:
  *   1. env PROMASTER_REPO
- *   2. "promaster".repo in the current dir's package.json
+ *   2. "ubuligan".repo in the current dir's package.json
  *   3. DEFAULT_REPO constant
  * Returns { owner, repo, token }. Throws if none is a valid "owner/repo".
  */
@@ -49,6 +49,6 @@ export function resolveRepo() {
     }
   }
   throw new Error(
-    "No source repo configured. Set PROMASTER_REPO=owner/repo, add { \"promaster\": { \"repo\": \"owner/repo\" } } to package.json, or edit DEFAULT_REPO."
+    "No source repo configured. Set PROMASTER_REPO=owner/repo, add { \"ubuligan\": { \"repo\": \"owner/repo\" } } to package.json, or edit DEFAULT_REPO."
   );
 }

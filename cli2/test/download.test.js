@@ -19,7 +19,7 @@ test("htmlName replaces the extension with .html", () => {
   assert.equal(htmlName("../../etc/passwd"), "passwd.html");
 });
 
-test("save renders markdown to ./promaster-data/<category>/<name>.html", async () => {
+test("save renders markdown to ./ubuligan-data/<category>/<name>.html", async () => {
   const dir = await mkdtemp(join(tmpdir(), "promaster-"));
   const cwd = process.cwd();
   process.chdir(dir);
@@ -36,7 +36,7 @@ test("save renders markdown to ./promaster-data/<category>/<name>.html", async (
   }
 });
 
-test("saveTemp renders HTML into a fresh OS temp dir (not promaster-data)", async () => {
+test("saveTemp renders HTML into a fresh OS temp dir (not ubuligan-data)", async () => {
   const { path, dir } = await saveTemp({ name: "war-and-peace.md" }, "# War");
   try {
     assert.ok(path.startsWith(tmpdir()), "path should live under the OS temp dir");

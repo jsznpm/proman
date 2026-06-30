@@ -41,7 +41,7 @@ test("FolderList renders folder names after loading", async () => {
     );
     await delay(100);
     const frame = lastFrame();
-    assert.match(frame, /PROMASTER/);
+    assert.match(frame, /UBULIGAN/);
     assert.match(frame, /blog/);
     assert.match(frame, /books/);
     assert.match(frame, /memory/);

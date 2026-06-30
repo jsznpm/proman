@@ -3,7 +3,7 @@ import { basename, extname, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { mdToHtml } from "./render.js";
 
-export const OUTPUT_ROOT = "promaster-data";
+export const OUTPUT_ROOT = "ubuligan-data";
 
 /**
  * Sanitize a GitHub file name to a safe basename (no traversal, no slashes).
@@ -28,7 +28,7 @@ export function htmlName(name) {
 
 /**
  * Render markdown to a styled HTML document and save it under
- * ./promaster-data/<category>/<name>.html. Returns the absolute path.
+ * ./ubuligan-data/<category>/<name>.html. Returns the absolute path.
  */
 export async function save(category, file, content) {
   const dir = resolve(process.cwd(), OUTPUT_ROOT, safeName(category));
@@ -44,11 +44,11 @@ export async function save(category, file, content) {
 
 /**
  * Render markdown to HTML in a fresh OS temp directory (never under
- * promaster-data). Returns { path, dir } so the caller can delete `dir`
+ * ubuligan-data). Returns { path, dir } so the caller can delete `dir`
  * once the user is done viewing — nothing is persisted.
  */
 export async function saveTemp(file, content) {
-  const dir = await mkdtemp(resolve(tmpdir(), "promaster-"));
+  const dir = await mkdtemp(resolve(tmpdir(), "ubuligan-"));
   const base = safeName(file.name);
   const ext = extname(base);
   const title = ext ? base.slice(0, -ext.length) : base;

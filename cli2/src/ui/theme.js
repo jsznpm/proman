@@ -9,4 +9,4 @@ export const COLORS = {
   error: "red",
 };
 
-export const LOGO = "PROMASTER²";
+export const LOGO = "UBULIGAN";

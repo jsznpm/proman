@@ -22,7 +22,7 @@ test("env PROMASTER_REPO wins over package.json", async () => {
   const prev = process.env.PROMASTER_REPO;
   process.env.PROMASTER_REPO = "envowner/envrepo";
   try {
-    await inTempDir({ promaster: { repo: "pkgowner/pkgrepo" } }, async () => {
+    await inTempDir({ ubuligan: { repo: "pkgowner/pkgrepo" } }, async () => {
       const r = resolveRepo();
       assert.equal(r.owner, "envowner");
       assert.equal(r.repo, "envrepo");
@@ -37,7 +37,7 @@ test("package.json used when env unset", async () => {
   const prev = process.env.PROMASTER_REPO;
   delete process.env.PROMASTER_REPO;
   try {
-    await inTempDir({ promaster: { repo: "pkgowner/pkgrepo" } }, async () => {
+    await inTempDir({ ubuligan: { repo: "pkgowner/pkgrepo" } }, async () => {
       const r = resolveRepo();
       assert.equal(r.owner, "pkgowner");
       assert.equal(r.repo, "pkgrepo");

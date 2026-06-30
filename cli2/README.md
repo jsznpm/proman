@@ -1,28 +1,78 @@
-# promaster2 (TUI)
+# ubuligan (TUI)
+
+```
+ ██    ██ ██████  ██    ██ ██      ██  ██████   █████  ███    ██
+ ██    ██ ██   ██ ██    ██ ██      ██ ██       ██   ██ ████   ██
+ ██    ██ ██████  ██    ██ ██      ██ ██   ███ ███████ ██ ██  ██
+ ██    ██ ██   ██ ██    ██ ██      ██ ██    ██ ██   ██ ██  ██ ██
+  ██████  ██████   ██████  ███████ ██  ██████  ██   ██ ██   ████
+        [ markdown recon // terminal access // v2 ]
+```
 
 A full-screen terminal UI for browsing Markdown content from a public GitHub
 repo. Built with [ink](https://github.com/vadimdemedes/ink) (React for the
-terminal). It is a sibling of the `promaster` CLI in `../cli` — same content
-source, different front-end.
+terminal). Sibling of the `promaster` CLI in `../cli` — same content source,
+different front-end.
 
 - Browse content folders and files without leaving the terminal.
 - **Preview Markdown right in the terminal** (rendered with `marked-terminal`).
 - Open any file in the browser as styled HTML (temporary, auto-cleaned on exit).
 - Podcast folders open their link directly.
 
+## Install
+
+### Option A — npm (global)
+
+```bash
+npm install -g ubuligan
+ubuligan list      # interactive TUI
+ubuligan help      # usage
+```
+
+### Option B — npx (no install)
+
+```bash
+npx ubuligan list
+```
+
+### Option C — from source
+
+```bash
+git clone https://github.com/jsznpm/proman
+cd proman/cli2
+npm install
+node bin/ubuligan.js list
+```
+
+### Option D — standalone binary
+
+Grab a prebuilt executable from `dist/` (or build it — see below), then run it
+directly. No Node required.
+
+```bash
+./ubuligan-linux list          # Linux
+./ubuligan-mac-arm64 list      # macOS (Apple Silicon)
+ubuligan-win.exe list          # Windows
+```
+
 ## Usage
 
 ```bash
-npm install
-node bin/promaster2.js list     # the interactive TUI
-node bin/promaster2.js help     # usage
+ubuligan list      # the interactive TUI
+ubuligan help      # usage
 ```
 
 Point it at a different content repo:
 
 ```bash
-PROMASTER_REPO=owner/repo node bin/promaster2.js list
+PROMASTER_REPO=owner/repo ubuligan list
 GITHUB_TOKEN=...   # optional, raises the GitHub API rate limit above 60/hr
+```
+
+Or set it per-project in `package.json`:
+
+```json
+{ "ubuligan": { "repo": "owner/repo" } }
 ```
 
 ## Keys
@@ -53,6 +103,9 @@ Requires [bun](https://bun.sh):
 npm run build:all   # or build:win / build:mac / build:mac-intel / build:linux
 ```
 
+Output lands in `dist/` (`ubuligan-win.exe`, `ubuligan-mac-arm64`,
+`ubuligan-mac-x64`, `ubuligan-linux`).
+
 Verified with bun 1.2.21: ink's yoga WebAssembly bundles into the executable
 fine. `react-devtools-core` is listed as a direct dependency on purpose — ink
 imports it, and without it `bun --compile` fails with `Could not resolve
@@ -62,8 +115,3 @@ imports it, and without it `bun --compile` fails with `Could not resolve
 > ([bun#13552](https://github.com/oven-sh/bun/issues/13552)), ship `yoga.wasm`
 > next to the executable or use the plain `npm`/`npx` install — that path
 > always works.
-
-## Publishing
-
-`name` in `package.json` is a placeholder (`promaster-tui`). Set your own npm
-package name before `npm publish`.

@@ -3,14 +3,14 @@ import { runList } from "../src/commands/list.js";
 import { HttpError } from "../src/github.js";
 import { printBanner } from "../src/banner.js";
 
-const USAGE = `promaster2 - browse Markdown from a GitHub repo in a full-screen TUI
+const USAGE = `ubuligan - browse Markdown from a GitHub repo in a full-screen TUI
 
 Usage:
-  promaster2 list      Pick a category, browse files, preview in the terminal,
-                       or open in the browser.
+  ubuligan list      Pick a category, browse files, preview in the terminal,
+                     or open in the browser.
 
 Config:
-  PROMASTER_REPO=owner/repo   Source repo (or "promaster".repo in package.json).
+  PROMASTER_REPO=owner/repo   Source repo (or "ubuligan".repo in package.json).
   GITHUB_TOKEN=...            Optional, raises the GitHub API rate limit.`;
 
 async function main() {
