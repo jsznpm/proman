@@ -1,0 +1,1513 @@
+### Why React?
+
+Əgər bu kitabı oxuyursunuzsa, çox güman ki, artıq **React** ilə tanışsınız. Əgər tanış deyilsinizsə, narahat olmayın. Fəlsəfi izahları minimum səviyyədə saxlamağa çalışacağam. Bununla belə, bu kitab kifayət qədər genişdir və çoxlu mövzunu əhatə edir. Buna görə də əvvəlcə ümumi yanaşmanı müəyyənləşdirmək vacibdir.
+
+Məqsədimiz yalnız **React** və **React Native** öyrənmək deyil. Eyni zamanda, bu gün və gələcəkdə **React** ilə hazırlamaq istədiyimiz istənilən tətbiqi dəstəkləyə biləcək, **scalable** və **adaptive architecture** qurmağı öyrənəcəyik.
+
+Başqa sözlə, məqsədimiz **React** ətrafında möhkəm bir təməl yaratmaq, onu müxtəlif alətlər və yanaşmalarla birləşdirərək uzunmüddətli istifadəyə uyğun bir ekosistem qurmaqdır. Bu kitab sizə **routing**, **TypeScript typing**, **testing** və bir çox digər vasitələrdən istifadə etməyi addım-addım göstərəcək.
+
+Bu fəsildə əvvəlcə **React**-ın niyə yaradıldığını qısa şəkildə izah edəcəyik. Daha sonra **React**-ın sadəliyinə və onun veb tərtibatçılarının tez-tez qarşılaşdığı performans problemlərini necə həll etdiyinə baxacağıq.
+
+Sonra **React**-ın **declarative** yanaşmasını və onun təqdim etdiyi **abstraction** səviyyəsini müzakirə edəcəyik. Daha sonra **React**-ın əsas xüsusiyyətlərinə toxunacaq və sonda isə ilk **React** layihəsini necə yaratmağı öyrənəcəyik.
+
+**React**-ın əsas konsepsiyalarını və **UI development** sahəsində hansı problemləri həll etdiyini başa düşdükdən sonra kitabın qalan hissəsini öyrənmək sizin üçün daha asan olacaq.
+
+Bu fəsildə aşağıdakı mövzular əhatə olunur:
+
+- React nədir?
+- React-da hansı yeniliklər var?
+- Yeni React layihəsinin yaradılması
+- 
+
+## React nədir?
+
+Məncə, **React**-ın rəsmi saytında (react.dev) verilən bir cümləlik təsvir həm qısa, həm də dəqiqdir:
+
+> **"İstifadəçi interfeysləri (user interfaces) yaratmaq üçün JavaScript kitabxanası."**
+> 
+
+Bu təsvir mükəmməldir. Çünki əksər hallarda bizə məhz bu lazımdır. Məncə, bu cümlənin ən gözəl tərəfi dediklərindən çox, demədikləridir.
+
+React **mega-framework** deyil.
+
+O, verilənlər bazasından (**database**) tutmuş **WebSocket** vasitəsilə real vaxt yeniləmələrinə qədər hər şeyi özündə birləşdirən **full-stack** həll təqdim etmir. Əslində isə belə əvvəlcədən hazırlanmış həllərin hamısına həmişə ehtiyac olmur.
+
+Bəs React **framework** deyilsə, onda əslində nədir?
+
+---
+
+## React sadəcə View Layer-dir
+
+React adətən tətbiqin (**application**) **view layer**-i kimi qəbul edilir.
+
+Bir tətbiq adətən bir neçə hissədən ibarət olur:
+
+- **View Layer**
+- **Logic Layer**
+- **Data Layer**
+
+Bu arxitekturada React əsasən **View Layer** üçün məsuliyyət daşıyır. Yəni məlumat (**data**) və tətbiqin vəziyyəti (**application state**) dəyişdikdə **UI**-ın render olunmasını və yenilənməsini idarə edir.
+
+React komponentləri istifadəçinin ekranda nə gördüyünü müəyyən edir.
+
+Şəkil 1.1 React-ın frontend tətbiqində hansı mövqedə yerləşdiyini göstərir.
+
+---
+
+Əslində React-ın əsas ideyası bundan ibarətdir.
+
+Kitab boyunca bu ideyanın müxtəlif tətbiqlərini görəcəyik, lakin ümumi iş prinsipi demək olar ki, həmişə eyni qalır.
+
+1. **Application Logic**
+    
+    Əvvəlcə tətbiqin biznes məntiqi işləyir və müəyyən **data** yaradır.
+    
+2. **Məlumatın UI-da göstərilməsi**
+    
+    Növbəti mərhələdə həmin məlumat **UI**-da render olunur.
+    
+3. **React Component**
+    
+    Bunun üçün həmin **data** React komponentinə ötürülür.
+    
+4. **Component-in rolu**
+    
+    React komponentinin əsas vəzifəsi həmin məlumat əsasında lazımi **HTML**-i yaradıb səhifədə göstərməkdir.
+    
+
+---
+
+Burada belə bir sual yarana bilər:
+
+> "Bunun nəyi fərqlidir? React sadəcə növbəti rendering texnologiyası deyilmi?"
+> 
+
+İlk baxışdan belə görünə bilər.
+
+Lakin React tətbiq hazırlama prosesini sadələşdirən bir sıra mühüm xüsusiyyətlər təqdim edir. Fəslin davamında həmin üstünlüklərə daha yaxından baxacağıq.
+
+---
+
+# Sadəlik üstünlükdür
+
+React öyrənilməsi və başa düşülməsi lazım olan çoxsaylı mürəkkəb hissələrdən ibarət deyil.
+
+Onun **API**-si kifayət qədər sadədir. Bununla belə, daxildə React kifayət qədər mürəkkəb mexanizmlərlə işləyir. Kitab boyunca bu daxili mexanizmləri və React-ın arxitekturasını ətraflı öyrənəcəyik ki, onun necə işlədiyini daha yaxşı başa düşəsiniz.
+
+Kiçik və sadə **API**-nin əsas üstünlüyü ondan ibarətdir ki, siz vaxtınızı onu öyrənməyə, sınaqdan keçirməyə və təcrübə qazanmağa sərf edirsiniz.
+
+Böyük **framework**-larda isə vaxtın böyük hissəsi müxtəlif funksiyaların necə işlədiyini anlamağa gedir.
+
+Şəkil 1.2 React ilə işləyərkən əsas diqqət yetirdiyimiz API-ləri göstərir.
+
+---
+
+React iki əsas API-dən ibarətdir.
+
+### React Component API
+
+Səhifədə render olunan komponentlərdən ibarətdir.
+
+### React DOM
+
+Komponentlərin veb səhifədə render olunmasını həyata keçirən API-dir.
+
+---
+
+Hər bir React komponentində əsasən aşağıdakı anlayışlarla işləyirik.
+
+### Data
+
+Komponentə müxtəlif mənbələrdən ötürülən məlumatdır. Komponent üçün həmin məlumatın haradan gəldiyi önəmli deyil. O, sadəcə bu məlumatı render edir.
+
+### Lifecycle
+
+Komponentin həyat dövrünü (**lifecycle**) ifadə edir.
+
+Məsələn, komponent render olunmazdan əvvəl, render olunduqdan sonra və ya səhifədən silinərkən müəyyən **hook** və ya metodlar işə düşür.
+
+### Events
+
+İstifadəçi qarşılıqlı əlaqələrinə (**user interactions**) cavab vermək üçün yazdığımız kod hissələridir.
+
+### JSX
+
+React komponentlərində **UI** strukturunu təsvir etmək üçün istifadə olunan sintaksisdir.
+
+JSX əsasən React ilə əlaqələndirilsə də, onu digər JavaScript kitabxanaları və framework-lərlə birlikdə də istifadə etmək mümkündür.
+
+---
+
+Hələlik bu anlayışların hər birini tam başa düşməyə çalışmayın.
+
+Burada əsas fikir odur ki, React öz təbiətinə görə sadədir.
+
+Diqqət etsəniz, öyrənilməsi lazım olan anlayışların sayı kifayət qədər azdır.
+
+Bu isə o deməkdir ki, uzun müddət API detalları ilə məşğul olmaq əvəzinə, əsas prinsipləri öyrəndikdən sonra React-dan düzgün istifadə nümunələrinə (**React usage patterns**) və **declarative UI** yanaşmasına daha çox diqqət ayıra bilərik.
+## Declarative UI Structures — Ətraflı xülasə
+
+Bu bölmənin əsas ideyası budur ki, **React-da UI-nı "necə dəyişəcəyimizi" deyil, "necə görünməsini istədiyimizi" təsvir edirik.** Bu yanaşma **Declarative Programming** adlanır.
+
+---
+
+## Separation of Concerns anlayışı
+
+Uzun illər proqramlaşdırmada belə bir prinsip mövcud idi:
+
+> **Logic** və **Presentation** bir-birindən ayrılmalıdır.
+> 
+
+Məsələn:
+
+- HTML → görünüş
+- CSS → dizayn
+- JavaScript → məntiq
+
+React-a ilk dəfə baxan insanların çoxu JSX-i görəndə təəccüblənirlər. Çünki JavaScript kodunun içində HTML-yə bənzər sintaksis yazılır.
+
+Bir çox proqramçı əvvəlcə bunu pis təcrübə hesab edir.
+
+Amma React bunu təsadüfi etmir.
+
+---
+
+## JSX nədir?
+
+JSX (**JavaScript XML**) React komponentlərinin UI strukturunu təsvir etmək üçün istifadə etdiyi sintaksisdir.
+
+Məsələn:
+
+```jsx
+return (
+  <div>
+    <h1>Hello</h1>
+  </div>
+);
+```
+
+Bu kod HTML deyil.
+
+Bu da JavaScript deyil.
+
+Bu, JSX-dir.
+
+React sonradan bunu adi JavaScript funksiyalarına çevirir.
+
+---
+
+## React niyə JSX istifadə edir?
+
+Çünki JSX vasitəsilə UI-ı oxumaq daha asandır.
+
+Məsələn belə yazmaq əvəzinə:
+
+```jsx
+document.createElement(...)
+appendChild(...)
+setAttribute(...)
+```
+
+sadəcə yazırsan
+
+```jsx
+<div>
+   <Button />
+</div>
+```
+
+və React qalan işi özü edir.
+
+---
+
+# Imperative Programming
+
+React-dan əvvəl UI əsasən belə dəyişdirilirdi.
+
+Məsələn jQuery:
+
+```jsx
+$("#button").click(function () {
+    $("#text").addClass("active");
+});
+```
+
+Burada sən browser-ə addım-addım əmr verirsən.
+
+1. Button-u tap
+2. Click gözlə
+3. Paragraph tap
+4. Class əlavə et
+
+Bu yanaşmaya **Imperative Programming** deyilir.
+
+Yəni
+
+> **"Necə et."**
+> 
+
+deyirsən.
+
+---
+
+## Bunun problemi nədir?
+
+Kiçik layihələrdə problem görünmür.
+
+Amma layihə böyüdükcə belə kod yaranır.
+
+```
+Button click
+
+↓
+
+Element tap
+
+↓
+
+API çağır
+
+↓
+
+Loading göstər
+
+↓
+
+Spinner gizlət
+
+↓
+
+Error göstər
+
+↓
+
+Class dəyiş
+
+↓
+
+Başqa elementi yenilə
+
+↓
+
+Yeni modal aç
+```
+
+Artıq yüzlərlə addım olur.
+
+Kod:
+
+- qarışıq olur
+- oxunması çətinləşir
+- dəyişdirilməsi riskli olur
+
+Bir yerdə dəyişiklik başqa yeri poza bilir.
+
+---
+
+# Declarative Programming
+
+React isə tam əksini edir.
+
+Sən browser-ə
+
+> bunu et
+> 
+
+demirsən.
+
+Sadəcə deyirsən
+
+> UI bu vəziyyətdə belə görünməlidir.
+> 
+
+Məsələn
+
+```jsx
+const [isHighlighted, setIsHighlighted] = useState(false);
+
+return (
+ <>
+   <button
+      onClick={() => setIsHighlighted(true)}
+   >
+      Add Class
+   </button>
+
+   <p className={isHighlighted && "highlight"}>
+      Paragraph
+   </p>
+ </>
+);
+```
+
+Burada sən heç vaxt demirsən
+
+```
+document.querySelector(...)
+classList.add(...)
+```
+
+Sadəcə deyirsən
+
+> əgər isHighlighted true-dursa class əlavə et.
+> 
+
+Qalan işi React özü edir.
+
+---
+
+# React nəyə qərar verir?
+
+React özü müəyyən edir
+
+- hansı element dəyişib
+- nə yenilənməlidir
+- hansı DOM node dəyişməlidir
+- hansına toxunmaq lazım deyil
+
+Sən bunlarla məşğul olmursan.
+
+---
+
+# UI State-ə əsasən qurulur
+
+React-da UI bir funksiyadır.
+
+```
+UI = f(state)
+```
+
+Yəni
+
+State dəyişirsə
+
+↓
+
+UI yenidən hesablanır.
+
+Məsələn
+
+```
+loading=true
+
+↓
+
+Spinner göstər
+```
+
+```
+loading=false
+
+↓
+
+Spinner gizlət
+```
+
+```
+user=null
+
+↓
+
+Login göstər
+```
+
+```
+user mövcuddur
+
+↓
+
+Dashboard göstər
+```
+
+Sən heç vaxt
+
+```
+show()
+hide()
+remove()
+append()
+```
+
+kimi əmrlər yazmırsan.
+
+Sadəcə vəziyyəti (**state**) dəyişirsən.
+
+---
+
+# React niyə bunu üstün tutur?
+
+Çünki bu yanaşma
+
+- daha oxunaqlıdır
+- daha test edilə bilir
+- daha az səhvə səbəb olur
+- böyük layihələrdə daha rahat idarə olunur
+
+Komponentə baxan proqramçı yalnız **state**-ə baxaraq UI-nın necə görünəcəyini anlaya bilir.
+
+---
+
+# Bölmənin əsas mesajı
+
+Bu bölmənin vermək istədiyi əsas fikir budur:
+
+- JSX sadəcə HTML yazmaq üçün deyil, **UI strukturunu deklarativ şəkildə təsvir etmək** üçündür.
+- React-da UI-nı dəyişdirmək üçün DOM üzərində addım-addım əmrlər yazmağa ehtiyac yoxdur.
+- **State** dəyişdikdə React UI-ı yenidən hesablayır və yalnız lazım olan dəyişiklikləri tətbiq edir.
+- Bu yanaşma (**Declarative Programming**) mürəkkəb tətbiqlərin daha sadə, oxunaqlı və idarəolunan şəkildə hazırlanmasına imkan verir.
+
+Bu, React fəlsəfəsinin ən vacib prinsiplərindən biridir və kitabın sonrakı bölmələrində dəfələrlə istifadə olunacaq.
+Bu bölmənin əsas ideyası belədir:
+
+> **React komponentləri statik deyil. Onlar zaman keçdikcə dəyişən məlumatlara (data) əsasən yenidən render olunur.**
+> 
+
+Başqa sözlə, React-da UI sabit bir HTML səhifəsi deyil. O, **data dəyişdikcə dəyişən canlı bir görünüşdür**.
+
+---
+
+# JSX statik görünür, amma əslində dinamikdir
+
+İlk baxışda JSX belə görünür:
+
+```jsx
+return (
+  <h1>Hello</h1>
+);
+```
+
+Sanki bu kod həmişə eyni nəticəni verəcək.
+
+Amma React-da JSX demək olar ki, həmişə **data** ilə birlikdə işləyir.
+
+Məsələn:
+
+```jsx
+return (
+   <h1>{user.name}</h1>
+);
+```
+
+və ya
+
+```jsx
+return (
+   {isLoggedIn ? <Dashboard /> : <Login />}
+);
+```
+
+Burada artıq UI sabit deyil.
+
+Data dəyişən kimi nəticə də dəyişəcək.
+
+---
+
+# React komponentləri data ilə işləyir
+
+Komponentə müxtəlif mənbələrdən məlumat gələ bilər.
+
+Məsələn:
+
+- props
+- state
+- API cavabı
+- Context
+- Redux
+- TanStack Query
+
+React üçün bunun fərqi yoxdur.
+
+Əsas odur ki, komponent yeni data alsın.
+
+---
+
+# Render nədir?
+
+Render dedikdə React komponentinin işləyərək JSX qaytarması nəzərdə tutulur.
+
+Məsələn
+
+```jsx
+function User({ name }) {
+   return <h1>{name}</h1>;
+}
+```
+
+Əgər
+
+```
+name = "Javid"
+```
+
+olarsa
+
+Render nəticəsi
+
+```html
+<h1>Javid</h1>
+```
+
+olar.
+
+---
+
+Sonra
+
+```
+name = "Ali"
+```
+
+olarsa
+
+React komponenti yenidən işləyəcək.
+
+Yeni nəticə
+
+```html
+<h1>Ali</h1>
+```
+
+olacaq.
+
+---
+
+# Hər render bir "snapshot"-dır
+
+Bu bölmənin ən vacib fikirlərindən biri budur.
+
+React hər render-i
+
+> **bir şəkil (snapshot)**
+> 
+
+kimi qəbul edir.
+
+Məsələn
+
+İlk render
+
+```
+count = 0
+```
+
+↓
+
+React bunu yadda saxlayır.
+
+Sonra
+
+```
+count = 1
+```
+
+↓
+
+yenidən render edir.
+
+Bu artıq başqa snapshot-dır.
+
+Sonra
+
+```
+count = 2
+```
+
+↓
+
+yenə yeni snapshot yaranır.
+
+Yəni React tarixçədə ardıcıl olaraq müxtəlif UI vəziyyətlərini görür.
+
+```
+Render 1
+
+count=0
+```
+
+↓
+
+```
+Render 2
+
+count=1
+```
+
+↓
+
+```
+Render 3
+
+count=2
+```
+
+---
+
+# UI zamanla dəyişir
+
+Tətbiqlər statik deyil.
+
+İstifadəçi
+
+- klik edir
+- məlumat daxil edir
+- API cavabı gəlir
+- loading bitir
+- notification gəlir
+
+Bütün bunlar **data**-nı dəyişdirir.
+
+Data dəyişdikcə React komponenti yenidən render olunur.
+
+---
+
+Məsələn
+
+İlk vəziyyət
+
+```
+loading = true
+```
+
+↓
+
+```
+Loading...
+```
+
+Sonra
+
+```
+loading = false
+```
+
+↓
+
+```
+Products
+```
+
+və ya
+
+```
+error = true
+```
+
+↓
+
+```
+Something went wrong
+```
+
+Yəni UI həmişə mövcud vəziyyətə (**state**) uyğun qurulur.
+
+---
+
+# React niyə hər dəfə yenidən render edir?
+
+İlk baxışdan belə görünə bilər:
+
+> "Hər dəfə komponent yenidən işləyirsə, bu çox yavaş olmaz?"
+> 
+
+Bu tamamilə normal sualdır.
+
+Əgər hər render zamanı bütün HTML yenidən yaradılıb DOM-a yazılsaydı, həqiqətən də performans problemi yaranardı.
+
+Amma React bunu etmir.
+
+O, əvvəlki render ilə yeni render-i müqayisə edir və yalnız dəyişən hissələri yeniləyir.
+
+Bu proses sonrakı bölmədə izah olunan **Virtual DOM**, **diffing** və **patching** mexanizmləri sayəsində mümkün olur.
+
+---
+
+# Nəticə
+
+Bu bölmənin əsas mesajı budur:
+
+- React komponentləri statik deyil; onlar **data** dəyişdikcə yenidən **render** olunur.
+- Hər **render** həmin andakı **state** və **props** əsasında yaranan yeni bir **snapshot** kimidir.
+- UI həmişə mövcud **data**nın əksidir. **Data** dəyişirsə, UI da dəyişir.
+- React bu prosesi elə optimallaşdırır ki, yalnız həqiqətən dəyişən hissələr yenilənsin. Bunun necə işlədiyi növbəti **Performance matters** bölməsində izah olunur.
+- Bu bölmə React-ın ən vacib konsepsiyalarından birini izah edir:
+
+> **Əgər React hər dəfə komponenti yenidən render edirsə, niyə tətbiq yavaşlamır?**
+> 
+
+İlk baxışdan belə görünür ki, React çox iş görür. Amma əslində React bunu çox optimallaşdırılmış şəkildə həyata keçirir.
+
+---
+
+# Declarative UI performans problemi yaradırmı?
+
+Əvvəlki bölmədə öyrəndik ki, React **Declarative Programming** yanaşmasından istifadə edir.
+
+Sən sadəcə yazırsan:
+
+```jsx
+return <UserList users={users} />;
+```
+
+və ya
+
+```jsx
+return isLoading ? <Spinner /> : <Products />;
+```
+
+Sən browser-ə addım-addım nə etməli olduğunu demirsən.
+
+Bu çox rahatdır.
+
+Amma burada bir sual yaranır.
+
+Əgər hər dəfə `state` dəyişəndə React komponenti yenidən işləyirsə,
+
+onda hər dəfə bütün səhifə yenidən yaradılır?
+
+Əgər belə olsaydı, React çox yavaş işləyərdi.
+
+---
+
+# İlk render
+
+İlk dəfə komponent yaradılarkən React aşağıdakı addımları edir.
+
+```
+Component
+
+↓
+
+JSX
+
+↓
+
+React Element
+
+↓
+
+DOM
+
+↓
+
+Browser göstərir
+```
+
+Bu ilk renderdir.
+
+Burada problem yoxdur.
+
+Çünki DOM boşdur.
+
+React sadəcə elementləri yaradıb səhifəyə əlavə edir.
+
+---
+
+# Əsl problem sonrakı renderlərdir
+
+Məsələn
+
+```
+count = 0
+```
+
+↓
+
+ekranda görünür.
+
+Sonra
+
+```
+count = 1
+```
+
+olur.
+
+İndi React nə etməlidir?
+
+Ən sadə yol belə olardı.
+
+```
+Sil bütün DOM-u
+
+↓
+
+Yenidən yarat
+
+↓
+
+Yenidən əlavə et
+```
+
+Bu işləyərdi.
+
+Amma çox yavaş olardı.
+
+Çünki browser üçün ən bahalı əməliyyatlardan biri DOM-u dəyişməkdir.
+
+---
+
+# DOM niyə bahalıdır?
+
+DOM adi JavaScript obyekti deyil.
+
+DOM browser tərəfindən idarə olunur.
+
+DOM-da dəyişiklik baş verəndə browser
+
+- Layout hesablayır
+- Reflow edir
+- Repaint edir
+- Composite edir
+
+Bunların hamısı CPU istifadə edir.
+
+Məsələn
+
+1000 element olan cədvəldə
+
+yalnız
+
+```
+1 element dəyişib.
+```
+
+amma sən bütün cədvəli silib yenidən yaratsan,
+
+browser boş yerə çox iş görəcək.
+
+---
+
+# Handlebars kimi Template Engine-lər
+
+Kitab burada maraqlı müqayisə aparır.
+
+Məsələn
+
+Handlebars.
+
+İlk render
+
+```
+Template
+
+↓
+
+HTML String
+
+↓
+
+DOM
+```
+
+Problem yoxdur.
+
+Amma data dəyişəndə
+
+yenidən
+
+```
+Template
+
+↓
+
+HTML String
+
+↓
+
+DOM
+```
+
+yaranır.
+
+Yəni hər şey yenidən yaradılır.
+
+Buna görə proqramçılar
+
+belə workaround yazmağa başlayırlar.
+
+```
+if (userChanged)
+
+↓
+
+yalnız bu elementi dəyiş
+
+↓
+
+bu classı əlavə et
+
+↓
+
+bu texti dəyiş
+```
+
+Beləliklə
+
+declarative template
+
+- 
+
+imperative DOM manipulation
+
+qarışır.
+
+Nəticədə kod mürəkkəbləşir.
+
+---
+
+# React fərqli işləyir
+
+React deyir
+
+Sən DOM-a toxunma.
+
+Sadəcə yeni UI yaz.
+
+Məsələn
+
+Birinci render
+
+```jsx
+<h1>Hello</h1>
+```
+
+İkinci render
+
+```jsx
+<h1>Hello Javid</h1>
+```
+
+Sən heç nə etmirsən.
+
+React özü qərar verir
+
+```
+Nə dəyişib?
+```
+
+---
+
+# Virtual DOM
+
+React bunun üçün
+
+**Virtual DOM**
+
+istifadə edir.
+
+Virtual DOM
+
+real DOM-un
+
+JavaScript yaddaşındakı surətidir.
+
+```
+Browser DOM
+
+↓
+
+Memory-də
+
+Virtual DOM
+```
+
+Virtual DOM browser deyil.
+
+Sadəcə JavaScript obyektidir.
+
+JavaScript obyektləri ilə işləmək
+
+DOM ilə işləməkdən qat-qat sürətlidir.
+
+---
+
+# Yeni render necə işləyir?
+
+Məsələn
+
+İlk render
+
+```
+<h1>Hello</h1>
+```
+
+Virtual DOM
+
+```
+h1
+
+↓
+
+Hello
+```
+
+Sonra
+
+```
+Hello Javid
+```
+
+olur.
+
+Yeni Virtual DOM yaranır.
+
+```
+h1
+
+↓
+
+Hello Javid
+```
+
+İndi React
+
+köhnə Virtual DOM
+
+ilə
+
+yeni Virtual DOM-u
+
+müqayisə edir.
+
+---
+
+# Diffing
+
+Bu müqayisə prosesinə
+
+**Diffing**
+
+deyilir.
+
+React baxır
+
+```
+Element dəyişib?
+
+↓
+
+Xeyr
+```
+
+```
+Tag dəyişib?
+
+↓
+
+Xeyr
+```
+
+```
+Text dəyişib?
+
+↓
+
+Bəli
+```
+
+Onda React qərar verir.
+
+```
+Yalnız text dəyişməlidir.
+```
+
+---
+
+# Patching
+
+Sonra React
+
+yalnız lazım olan DOM əməliyyatını edir.
+
+Bu mərhələyə
+
+**Patching**
+
+deyilir.
+
+Yəni
+
+```
+DOM.remove()
+
+DOM.append()
+
+DOM.replace()
+```
+
+kimi böyük əməliyyatlar yox,
+
+sadəcə
+
+```
+textNode dəyiş.
+```
+
+---
+
+# React niyə sürətlidir?
+
+Çünki
+
+1000 elementdən
+
+yalnız biri dəyişibsə,
+
+React
+
+999 elementə
+
+heç toxunmur.
+
+Bu da
+
+DOM əməliyyatlarını minimuma endirir.
+
+---
+
+# React yenə də render edir
+
+Burada vacib bir məqam var.
+
+Bir çoxları düşünür ki
+
+React yalnız dəyişən komponenti render edir.
+
+Əslində
+
+React komponent funksiyasını yenidən işlədir.
+
+Yəni
+
+```jsx
+function App() {}
+```
+
+yenidən çağırılır.
+
+Amma
+
+DOM tam yenilənmir.
+
+Çünki
+
+Diffing
+
+və
+
+Patching
+
+yalnız dəyişən hissəni tətbiq edir.
+
+Bu iki anlayışı qarışdırmaq olmaz:
+
+- **Re-render** — React komponentinin funksiyasının yenidən icra olunması.
+- **DOM Update** — Real DOM-da dəyişiklik edilməsi.
+
+Hər **DOM Update** bir **re-render** nəticəsində baş verir, amma hər **re-render** mütləq DOM dəyişiklikləri ilə nəticələnmir.
+
+---
+
+# React niyə bunu gizlədir?
+
+React istəyir ki, proqramçı
+
+bunları düşünməsin:
+
+- `appendChild`
+- `removeChild`
+- `replaceChild`
+- `querySelector`
+- `textContent`
+
+Sən sadəcə UI-ı təsvir edirsən.
+
+React isə
+
+- müqayisə edir (**Diffing**),
+- optimallaşdırır,
+- yalnız lazım olan dəyişiklikləri edir (**Patching**).
+
+---
+
+# Concurrent Rendering
+
+Kitabın sonunda qeyd olunur ki, React-ın yeni versiyalarında (**React 18** və sonrakılar) daxili **rendering** alqoritmləri daha da təkmilləşdirilib.
+
+Əvvəllər böyük bir render prosesi əsas axını (**main thread**) uzun müddət məşğul saxlaya bilərdi və bu müddətdə istifadəçi klik etsə belə, browser cavab verməkdə gecikə bilərdi.
+
+Yeni **Concurrent Rendering** mexanizmi React-a işləri daha çevik planlamağa imkan verir. React uzun render prosesini hissələrə bölə, daha vacib istifadəçi əməliyyatlarına (məsələn, klik və ya yazı daxil etmə) üstünlük verə və daha axıcı istifadəçi təcrübəsi təmin edə bilir.
+
+---
+
+# Bu bölmənin əsas mesajı
+
+Bu bölmənin vermək istədiyi əsas fikir budur:
+
+- React **Declarative UI** yanaşmasını performansdan imtina etmədən təqdim edir.
+- React hər dəfə **re-render** etsə də, **Real DOM**u tamamilə yeniləmir.
+- Bunun üçün **Virtual DOM** istifadə olunur.
+- React köhnə və yeni **Virtual DOM** ağaclarını müqayisə edir (**Diffing**) və yalnız həqiqətən dəyişən hissələri **Real DOM**a tətbiq edir (**Patching**).
+- Nəticədə proqramçı sadə və oxunaqlı kod yazır, React isə arxa planda performansı optimallaşdırır. Bu mexanizm React-ın digər UI kitabxanalarından fərqlənməsinin əsas səbəblərindən biridir.
+
+  # The Right Level of Abstraction — React-ın Ən Böyük Gücü
+
+Bir çox proqramçı React öyrənməyə başlayanda onun komponentləri, JSX və hook-larına fokuslanır. Lakin React-ı uzunömürlü və güclü edən əsas xüsusiyyət bunlar deyil. React-ın əsl gücü onun təqdim etdiyi **abstraction** səviyyəsindədir.
+
+Məhz bu abstraksiya React-ın eyni proqramlaşdırma modelini müxtəlif platformalarda tətbiq etməsinə imkan verir.
+
+## Abstraction nədir?
+
+Abstraction proqramlaşdırmada mürəkkəb detalları gizlədərək proqramçının yalnız vacib hissəyə fokuslanmasını təmin edən yanaşmadır.
+
+Məsələn, avtomobil idarə edərkən mühərrikin daxilində yanacağın necə yandığını bilmirik. Biz sadəcə sükanı çevirir, qaz və əyləc pedalından istifadə edirik. Mürəkkəb mexanizmlər bizdən gizlədilib.
+
+React da eyni prinsiplə işləyir.
+
+Sən browser-in DOM API-lərini, native platformaların render mexanizmlərini və ya PDF generatorlarının daxili işləmə prinsipini bilmədən istifadəçi interfeysi yaradırsan.
+
+---
+
+## React əslində DOM deyil
+
+Yeni başlayanların etdiyi ən böyük səhvlərdən biri React-ı DOM ilə eyniləşdirməkdir.
+
+Əslində React və React DOM fərqli anlayışlardır.
+
+**React** komponentləri, state, props, hooks və reconciliation kimi əsas mexanizmləri təmin edir.
+
+**React DOM** isə bu komponentləri browser-in DOM elementlərinə çevirən xüsusi bir render mühərrikidir.
+
+Başqa sözlə:
+
+- React → UI necə olmalıdır?
+- React DOM → Bunu browser-də necə göstərmək lazımdır?
+
+Bu iki anlayışı ayırdıqda React-ın niyə bu qədər çevik olduğunu başa düşmək daha asan olur.
+
+---
+
+## React yalnız browser üçün yazılmayıb
+
+React komponenti yazarkən belə bir kod yazırsan:
+
+```jsx
+function Button() {
+  return <button>Save</button>;
+}
+```
+
+Bu komponent browser-də işləyə bilər.
+
+Amma eyni proqramlaşdırma modeli telefon tətbiqində də işləyə bilər.
+
+Çünki React komponenti heç vaxt birbaşa browser ilə danışmır.
+
+O, sadəcə UI təsvir edir.
+
+Bu UI-nın hara render olunacağına isə renderer qərar verir.
+
+---
+
+## React Renderer nədir?
+
+Renderer React komponentlərini konkret platformaya uyğun nəticəyə çevirən mühərrikdir.
+
+Fərqli platformalar üçün fərqli renderer mövcuddur.
+
+### React DOM
+
+Brauzer üçün istifadə olunur.
+
+React komponentlərini HTML elementlərinə çevirir.
+
+```
+React Component
+
+↓
+
+React DOM
+
+↓
+
+Browser DOM
+```
+
+---
+
+### React Native
+
+Mobil tətbiqlər üçün istifadə olunur.
+
+Burada HTML yoxdur.
+
+```
+<View>
+<Text>
+<Button>
+```
+
+kimi Native komponentlər yaradılır.
+
+Sən React yazırsan.
+
+React Native isə onu Android və iOS komponentlərinə çevirir.
+
+---
+
+### React PDF
+
+React komponentlərindən PDF sənədləri yaratmağa imkan verir.
+
+Yəni eyni React yanaşması ilə hesabatlar, fakturalar və digər PDF sənədləri hazırlamaq mümkündür.
+
+---
+
+### React Unity
+
+React komponentlərini Unity oyun mühərrikində istifadə etməyə imkan verən renderer-lər də mövcuddur.
+
+Bu göstərir ki, React konkret bir platformaya bağlı texnologiya deyil.
+
+---
+
+## React nəyə fokuslanır?
+
+React heç vaxt demir:
+
+> "HTML yarat."
+> 
+
+React deyir:
+
+> "İstifadəçi interfeysini təsvir et."
+> 
+
+Bu iki fikir arasında böyük fərq var.
+
+Çünki UI müxtəlif formalarda mövcud ola bilər:
+
+- Browser
+- Mobil tətbiq
+- Desktop tətbiqi
+- Smart TV
+- PDF
+- Oyun mühərriki
+- Gələcəkdə yaranacaq yeni platformalar
+
+React üçün bunların hamısı sadəcə fərqli render hədəfləridir.
+
+---
+
+## React niyə bu qədər uzunömürlüdür?
+
+Texnologiyalar dəyişir.
+
+Bir vaxtlar jQuery çox populyar idi.
+
+Sonra Angular.
+
+Sonra Vue.
+
+Daha sonra Svelte və digər framework-lər ortaya çıxdı.
+
+Lakin React uzun illərdir aktuallığını qoruyur.
+
+Bunun səbəblərindən biri React-ın konkret platformaya deyil, UI modelinə fokuslanmasıdır.
+
+Əgər sabah tamamilə yeni bir cihaz növü yaradılsa, həmin platforma üçün yeni bir renderer yazmaq kifayət edə bilər.
+
+React komponentləri isə böyük ölçüdə dəyişmədən istifadə oluna bilər.
+
+---
+
+## React proqramçısı nəyi öyrənməlidir?
+
+Əsl React proqramçısı DOM API-lərini əzbərləməyə çalışmır.
+
+O, aşağıdakı anlayışları dərindən başa düşür:
+
+- Component
+- State
+- Props
+- Hooks
+- Rendering
+- Re-render
+- Composition
+- Reconciliation
+
+Çünki bunlar React-ın platformadan asılı olmayan əsas konsepsiyalarıdır.
+
+Renderer isə həmin konsepsiyaları konkret platformaya uyğun həyata keçirir.
+
+---
+
+## Real həyatdan bənzətmə
+
+Bunu elektrik prizinə bənzətmək olar.
+
+Telefon adapteri, noutbuk adapteri və ya televizor fərqli cihazlardır.
+
+Amma hamısı eyni prizdən istifadə edir.
+
+React da həmin priz kimidir.
+
+Renderer-lər isə müxtəlif adapterlərdir.
+
+```
+React Component
+
+↓
+
+Renderer
+
+↓
+
+Browser
+```
+
+və ya
+
+```
+React Component
+
+↓
+
+Renderer
+
+↓
+
+Android
+```
+
+və ya
+
+```
+React Component
+
+↓
+
+Renderer
+
+↓
+
+PDF
+```
+
+Sən yalnız komponent yazırsan.
+
+Renderer isə həmin komponenti uyğun platformaya çevirir.
+
+---
+
+## Nəticə
+
+React-ın ən böyük üstünlüyü onun müəyyən platformaya deyil, istifadəçi interfeysinin təsvirinə fokuslanmasıdır.
+
+Komponentlər platformadan asılı deyil.
+
+Platformaya uyğunlaşan hissə renderer-dir.
+
+Bu abstraksiya React-a müxtəlif mühitlərdə işləmək, yeni platformalara uyğunlaşmaq və uzun illər aktuallığını qorumaq imkanı verir.
+
+Məhz buna görə React sadəcə browser kitabxanası deyil. O, müxtəlif platformalarda istifadəçi interfeysləri qurmaq üçün ümumi bir proqramlaşdırma modelidir.
