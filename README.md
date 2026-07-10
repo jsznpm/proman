@@ -32,3 +32,6 @@ PROMASTER_REPO=owner/repo node cli/bin/promaster.js list
 
 Uygun foldere `.md` fayl at, commit + push et. promaster avtomatik gorecek.
 Sira git commit tarixine gore (yeni evvelde).
+
+qaldigim yer qeydi- Code Splitting Using Lazy 
+Components and Suspense
