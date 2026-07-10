@@ -35,3 +35,4 @@ Sira git commit tarixine gore (yeni evvelde).
 
 qaldigim yer qeydi- Code Splitting Using Lazy 
 Components and Suspense
+
