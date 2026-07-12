@@ -33,7 +33,6 @@ PROMASTER_REPO=owner/repo node cli/bin/promaster.js list
 Uygun foldere `.md` fayl at, commit + push et. promaster avtomatik gorecek.
 Sira git commit tarixine gore (yeni evvelde).
 
-qaldigim yer qeydi- 15
-Why React Native
+qaldigim yer qeydi- Переход в SRE из другой сферы
 
 
