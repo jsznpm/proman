@@ -36,3 +36,4 @@ Sira git commit tarixine gore (yeni evvelde).
 qaldigim yer qeydi- 15
 Why React Native
 
+
