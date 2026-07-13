@@ -1,3 +1,4 @@
+
 # Angular Kursu: Sıfırdan Əsaslara
 
 Bu kurs Angular framework-ünün nə olduğunu, əsas konseptlərini və gündəlik işlərdə istifadə olunan alətlərini öyrədir. Kurs [angular.dev](https://angular.dev/overview) rəsmi sənədlərinə əsaslanır və heç bir ön Angular biliyi tələb etmir — yalnız HTML, CSS və TypeScript-in əsaslarını bilmək kifayətdir.
