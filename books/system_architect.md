@@ -4583,3 +4583,901 @@ DevOps mədəniyyəti, praktikaları və alətləri birləşdirir — inkişaf v
 Xülasə olaraq gördük: CI/CD-nin çevikliyi yalnız **hərtərəfli avtomatlaşdırma** ilə əldə olunur. IaC və konfiqurasiya idarəetməsi bunun təməlidir. Chef, Puppet, Ansible konfiqurasiyanı idarə edir. Deploy strategiyaları — rolling, blue-green, red-black, immutable — hərəsi öz yerində. A/B test məhsulu birbaşa istifadəçi rəyi ilə yaxşılaşdırır.
 
 Bir sual sənə: sənin komandanda təhlükəsizlik hələ də "sonda yada düşən" bir şeydirmi, yoxsa artıq pipeline-ın birinci mərhələsinə köçüb? Sizcə necə?
+
+# Məlumatlarınız sizə nə deyir? Big Data arxitekturasına dürüst bir baxış
+
+Bu yazıda gəlin bir az fərqli danışaq. Adətən "böyük məlumat" (Big Data) deyəndə hamının ağlına dağ boyda serverlər, mürəkkəb diaqramlar və başa düşülməsi çətin sözlər gəlir. Amma əslində məsələ çox sadədir: hər gün, hər saniyə ətrafımızda nəhəng həcmdə məlumat yaranır — və bu məlumatların içində biznesi irəli aparacaq cavablar gizlənib. Sual isə budur: bu cavabları necə, nə qədər tez və nə qədər ucuza çıxarmaq olar?
+
+Əvvəlki mövzularda DevOps-dan danışmışdıq — kodun avtomatik olaraq necə deploy edildiyindən, komandaların bir yerdə necə işlədiyindən. İndi isə sıra məlumat mühəndisliyinə (data engineering) gəlib. Yəni tətbiqin müxtəlif yerlərindən məlumat toplamaq, saxlamaq, emal etmək və sonda ondan mənalı nəticələr çıxarmaq sənətinə.
+
+> Big Data məlumatı sadəcə yığmaq deyil. Əsl dəyər — o məlumatdan çıxarılan, rəqiblərdən bir addım öndə saxlayan nəticələrdədir.
+
+Gəlin başdan başlayaq.
+
+---
+
+## Niyə bu qədər çətindir?
+
+İnternet və rəqəmsal dövr hər yerdə inanılmaz sürətlə məlumat istehsal edir. Bu məlumatdan tez və faydalı nəticə çıxarmaq isə asan iş deyil. Buludun (cloud) populyarlaşması tətbiqləri cloud platformalarına köçürməyi asanlaşdırdı, amma məlumatın özünü idarə etmək get-gedə çətinləşdi.
+
+Məlumat üç istiqamətdə böyüyür — bunlara adətən **3V** deyirlər:
+
+- **Volume (həcm)** — nə qədər çox məlumat var;
+- **Velocity (sürət)** — məlumat nə qədər tez gəlir;
+- **Variety (müxtəliflik)** — məlumat neçə fərqli formada gəlir.
+
+Kompüterlərin özləri belə fərqli-fərqli məlumat istehsal edir. Nümunə üçün ən çox rast gəlinən mənbələr:
+
+- **Tətbiq server logları** — proqramların və oyunların jurnalları;
+- **Ziyarət logları (clickstream)** — saytdakı aktivlik, baxış tarixçəsi;
+- **Sensor məlumatları** — hava, su, külək enerjisi, ağıllı şəbəkələr;
+- **Qrafika və video** — küçə hərəkəti və təhlükəsizlik kameraları.
+
+Bir tərəfdən kompüterin yaratdığı məlumat (loglar, ikili fayllar), o biri tərəfdən insanın yaratdığı məlumat var — e-poçt axtarışları, təbii dildə sorğular, tonallıq analizi (sentiment analysis), məhsul tövsiyələri. Məsələn, sosial qraf analizi sizin dostlar dairənizə, maraq dairənizə əsasən məhsul təklif edə bilər.
+
+Amma bir çox komanda burada ilişib qalır. Ən tez-tez rast gəlinən maneələr:
+
+- **İstifadəçi təcrübəsi haqqında məhdud məlumat** — məlumat toplamaq bahalı və mürəkkəb olduğundan şirkətlər nə qədər məlumat topladıqlarını məhdudlaşdırmağa məcbur olurlar;
+- **Qərarların tez qəbul edilməsi zərurəti** — köhnə sistemlər yükün altında əzilir, halbuki bəzi qərarlar saniyələr içində verilməlidir;
+- **Machine Learning (ML) əsaslı innovasiya** — data science komandalarına maneəsiz məlumat girişi lazımdır;
+- **İnfrastruktur xərcləri** — hər şeyi öz serverində saxlayanlar miqyaslanma (scaling) ilə əziyyət çəkirlər.
+
+---
+
+## Big Data pipeline-i: baştan sona axın
+
+Big Data arxitekturasında hər şey **məlumatdan** başlayır və **nəticə ilə** bitir. Aradakı yol isə bir neçə mərhələdən keçir. Standart pipeline belədir:
+
+1. **Toplama (ingestion)** — məlumatı uyğun alətlə yığırsan;
+2. **Saxlama (storage)** — məlumatı uzunmüddətli saxlayırsan;
+3. **Emal / analiz (processing)** — məlumatı anbardan götürüb üzərində əməliyyatlar aparırsan, sonra yenidən saxlayırsan;
+4. **İstifadə** — emal olunmuş məlumat başqa alətlər tərəfindən işlədilir;
+5. **Vizuallaşdırma** — nəticələr BI (business intelligence) alətləri ilə göstərilir və ya ML alqoritminə ötürülür.
+
+Burada ən vacib anlayış **latency** (gecikmə) — məlumatın yaranması ilə nəticənin əldə edilməsi arasındakı vaxtdır.
+
+> Sürət pul deməkdir. Latency-ni azaldıb performansı artırdıqca xərc də qalxır. Ona görə düzgün dizayn — sürət, ötürmə qabiliyyəti (throughput) və xərc arasında balans tapmaqdır.
+
+Bir analogiya: təsəvvür et ki, birja platforması qurursan. Brokerlərin bazar dəyişikliyinə dərhal reaksiya verməsi lazımdır. Deməli, bahalı olsa da, yaddaşda işləyən bazalar (in-memory databases) və real-time axın emalı gərəkdir. Burada real-time analitikaya ehtiyac yüksək xərci **doğruldur**. Amma aylıq hesabat çıxaran bir sistem üçün eyni bahalı arxitektura tam israfdır.
+
+### Ən böyük səhv: hər şeyi bir alətlə etmək
+
+Çoxlu Big Data arxitekturasında rast gəlinən ən ciddi səhv — pipeline-ın bütün mərhələlərini vahid bir alətlə həll etməkdir. Bir server parkı ilə həm saxlama, həm çevirmə, həm vizuallaşdırma etmək ən sadə həll kimi görünə bilər, amma:
+
+- Bu cür **sıx bağlı (tightly coupled)** arxitekturalar sındırılmağa (breach) ən açıq olanlardır;
+- Sürət/xərc balansı optimal olmur.
+
+Bunun əvəzinə arxitektlər **FLAIR** prinsiplərini tövsiyə edir:
+
+- **F — Findability (tapıla bilənlik):** mövcud məlumatı və onun metadata-sını (sahibi, təsnifatı və s.) asan tapmaq;
+- **L — Lineage (mənşə):** məlumatın haradan gəldiyini, necə hərəkət etdiyini izləyə bilmək;
+- **A — Accessibility (əlçatanlıq):** məlumata giriş üçün təhlükəsizlik sertifikatlarını ala bilmək;
+- **I — Interoperability (uyğunluq):** məlumatı elə formatda saxlamaq ki, əksər daxili sistemlər ondan istifadə edə bilsin;
+- **R — Reusability (təkrar istifadə):** məlumat sənədləşdirilmiş sxemə malik olsun, mənbəyi aydın olsun. Bura tez-tez **MDM (Master Data Management)** prinsipləri də daxil olur.
+
+Ona görə mütəxəssislər toplama, saxlama, emal və analiz mərhələlərini bir-birindən **ayırmağı** məsləhət görür. Bu ayırma dözümlülüyü (fault tolerance) artırır: ikinci emal dövründə avadanlıq sıradan çıxsa, pipeline-ın əvvəlinə qayıtmaq lazım gəlmir — sistem ikinci saxlama mərhələsindən davam edir.
+
+Alət seçəndə bunları nəzərə al: **məlumatın strukturu**, **maksimal icazə verilən latency**, **minimal throughput** və **son istifadəçilərin tipik giriş şablonları**.
+
+---
+
+## Toplama (Data Ingestion)
+
+Toplama — məlumatı hərəkət etdirmək və saxlamaq üçün yığmaqdır. Mənbələr adətən dörd cürdür: **verilənlər bazaları, məlumat axınları (streams), loglar və fayllar.**
+
+Ən populyar mənbə verilənlər bazalarıdır — adətən tətbiqin əsas anbarı olan tranzaksiyalı sistemlər. Data stream-lər isə zamanla bağlı bitməyən ardıcıllıqlardır (məsələn, sayt qarşılıqlı əlaqələri və ya IoT cihaz məlumatları), adətən sənin təqdim etdiyin API vasitəsilə dərc olunur.
+
+Burada bir qayda var: **tranzaksiyalı anbar** məlumatı tez yazıb-oxumalıdır, ona görə application server-lər, web server-lər, NoSQL və relational bazalar (RDBMS) toplama üçün idealdır. **Fayl məlumatı** isə (adətən qoşulmuş cihazlardan gələn) tez saxlanma tələb etmir və çox vaxt tək istiqamətdə axır.
+
+Axın məlumatını (streaming) toplamaq üçün xüsusi həllər lazımdır:
+
+- **Apache Kafka** — güclü "publish–subscribe" (dərc et–abunə ol) funksionallığı ilə nəhəng həcmi emal edən populyar variant;
+- **Fluentd** — əsasən log aqreqasiyası ilə tanınan alət.
+
+Axın anbarı (məsələn Kafka) toplama sistemini (producer) emal sistemindən (consumer) ayırır və giriş məlumatı üçün uzunmüddətli **bufer** rolunu oynayır.
+
+### Açıq mənbəli toplama alətləri
+
+- **Apache DistCp** ("Distributed Copy") — Hadoop ekosisteminin bir hissəsi, klasterlər arası böyük həcmli məlumatı MapReduce paralel emalı ilə köçürür;
+- **Apache Sqoop** — Hadoop ilə relational anbarlar arasında məlumat ötürür. Strukturlaşdırılmış anbardan **HDFS**-ə (Hadoop Distributed File System) import və əksinə export edir;
+- **Apache Flume** — böyük həcmli log məlumatını toplamaq üçün, Hadoop-a etibarlı yığım təmin edir;
+- **Apache Storm** və **Apache Samza** — bitməyən axınların etibarlı emalı üçün.
+
+### Cloud-da toplama
+
+Üç böyük provayder — AWS, GCP və Azure — hərəsi özünəməxsus xidmətlər təklif edir:
+
+- **AWS:**
+  - *Direct Connect* — AWS-ə yüksək sürətli, aşağı latency-li özəl şəbəkə bağlantısı;
+  - *Snowball və Snowmobile* — nəhəng həcmi (terabayt–petabayt) fiziki cihazlarla köçürmək üçün. Snowmobile bir ötürmədə 100 PB-a qədər apara bilir;
+  - *DMS (Database Migration Service)* — baza miqrasiyasını sadələşdirir, **CDC (change data capture)** ilə davamlı replikasiya təmin edir.
+- **GCP:**
+  - *Storage Transfer Service* — online mənbələrdən (S3, HTTP/HTTPS) böyük həcmi köçürür;
+  - *Pub/Sub* — real-time axın toplama və mesajlaşma;
+  - *Dataflow* — **ETL (extract, transform, load)** və real-time hadisə axınları üçün.
+- **Azure:**
+  - *Data Factory* — həm lokal, həm cloud data integration serveri;
+  - *Event Hubs* — saniyədə milyonlarla hadisə emal edir;
+  - *Import/Export* — fiziki disklərlə kütləvi ötürmə.
+
+---
+
+## Saxlama (Data Storage)
+
+Ən çox rast gəlinən səhv — bütün ehtiyaclar üçün **tək bir həll** (adətən RDBMS) işlətməkdir. Reallıqda ideal seçim latency və xərc arasında balans saxlayan **kombinasiya**dır. Yəni: doğru iş üçün doğru alət.
+
+Saxlama seçimini müəyyən edən suallar:
+
+- **Məlumat nə qədər strukturlaşdırılıb?** Apache web logları kimi zəif strukturlu, yoxsa graphics/audio/video/PDF kimi ixtiyari ikili, yaxud JSON/CSV kimi yarı-strukturlu?
+- **Nə qədər tez sorğulanmalıdır?** Real-time (hər yeni yazıda qərar verilir), yoxsa gündəlik/həftəlik/aylıq paketlər?
+- **Nə həcmdə toplanır?** REST API-dən gələn bir neçə KB, yoxsa eyni anda gələn nəhəng yazı massivi?
+- **Ümumi həcm və artım sürəti?** Gigabaytlar, terabaytlar, yoxsa petabayt-exabayt?
+- **Nə qədərə başa gəlir?** Hər mühitdə **performans, dözümlülük və xərc** arasında üçbucaq (constraint triangle) var — biri artdıqca digərinə güzəşt edirsən.
+
+### Strukturlaşdırılmış məlumat: sətir vs sütun
+
+Əksər tranzaksiyalı bazalar (Oracle, MySQL, SQL Server, PostgreSQL) **sətir səviyyəsində** işləyir. Sətir formatları məlumatı sətirlərlə saxlayır — diskə yazmaq üçün ən sürətli, amma oxumaq üçün yox, çünki çoxlu lazımsız məlumatı atlamaq lazım gəlir.
+
+**Sütun (columnar) formatlar** isə bir sütunun bütün dəyərlərini bir yerdə saxlayır. Bu, sıxılmanı (compression) yaxşılaşdırır və oxu performansını artırır.
+
+Bir misalla aydınlaşdıraq: təsəvvür et ki, 50 sütunlu sifariş cədvəlindən müəyyən ayın ümumi satışını öyrənmək istəyirsən.
+
+- **Sətir yönümlü arxitekturada** sorğu bütün 50 sütunu ilə cədvəli tam skan edir.
+- **Sütun yönümlü arxitekturada** sorğu yalnız satış sütununu skan edir — nəticədə performans dəfələrlə artır.
+
+### Relational bazalar (OLTP)
+
+RDBMS **real-time tranzaksiya emalı (OLTP)** üçün ən uyğundur. İnternet mağazalar, bank tətbiqləri, otel rezervasiya sistemləri relational bazalar üzərində qurulur. Tranzaksiyalı məlumat üçün baza **ACID** prinsiplərinə əməl etməlidir:
+
+- **Atomicity (atomarlıq):** tranzaksiya ya tam icra olunur, ya tam geri qaytarılır;
+- **Consistency (uyğunluq):** tranzaksiya bitəndə bütün məlumat bazada saxlanılır;
+- **Isolation (təcrid):** eyni vaxtda gedən tranzaksiyalar bir-birinə mane olmur;
+- **Durability (dözümlülük):** sistem/enerji kəsilsə də, tranzaksiya sonuncu məlum vəziyyətdən davam edir.
+
+### Data warehouse-lar (OLAP)
+
+Data warehouse — bir və ya bir neçə mənbədən yığılmış məlumatın mərkəzləşdirilmiş anbarıdır. Onlar **yalnız strukturlaşdırılmış relational məlumatla** işləyir və **OLAP (analitik emal)** üçün optimallaşdırılıb.
+
+Bir bank ssenarisi: bank müştəri hesabları, tranzaksiyalar, kredit şərtləri və filiallar haqqında məlumatı warehouse-da saxlayır. Sonra ən populyar hesab tiplərini, zamanla tranzaksiya həcmini analiz edir və əsaslı qərarlar qəbul edir.
+
+Müasir warehouse-lar sürəti üçün **sütun bazalarından** istifadə edir. Məsələn, **Amazon Redshift, Snowflake, Google BigQuery** — sütun saxlama və **MPP (massively parallel processing)** sayəsində yüksək sürət verir. MPP-də fərqli prosessorlar eyni vaxtda fərqli məlumat seqmentləri üzərində işləyir.
+
+Amma warehouse-ların məhdudiyyəti var: paketlərlə yüklənmə tələb edir, deməli real-time analitika verə bilmir. Həmçinin korporativ məlumatın müxtəlifliyi artdıqca (mətn, IoT, qrafika, audio, video) və ML/AI populyarlaşdıqca ənənəvi warehouse modelinin çərçivəsi dar gəlməyə başladı.
+
+### NoSQL bazalar
+
+NoSQL bazalar (DynamoDB, Cassandra, MongoDB) relational bazaların miqyaslanma və performans problemlərini həll edir. Adından göründüyü kimi, onlar relational deyil — cədvəllər arası açıq əlaqə mexanizmi (join, foreign key, məcburi normallaşdırma) yoxdur.
+
+NoSQL bir neçə modeldən istifadə edir:
+
+- **Sütun (columnar):** Apache Cassandra, Apache HBase — sorğuda yalnız konkret sütunu skan edir;
+- **Sənəd yönümlü (document):** MongoDB, Couchbase, MarkLogic, DynamoDB, DocumentDB — JSON/XML kimi yarı-strukturlu məlumat üçün;
+- **Qraf (graph):** Amazon Neptune, JanusGraph, Neo4j, OrientDB — təpə (vertex) və kənarları (edge) saxlayır;
+- **Yaddaşda "açar–dəyər" (in-memory key–value):** Redis, Memcached — intensiv oxu üçün məlumatı yaddaşda saxlayır. Sorğu əvvəl cache-ə düşür; məlumat cache-də varsa, əsas bazaya getməyə ehtiyac qalmır.
+
+### SQL vs NoSQL müqayisəsi
+
+| Xüsusiyyət | SQL bazalar | NoSQL bazalar |
+|---|---|---|
+| **Məlumat modeli** | Relational model — məlumatı sətir və sütunlu cədvəllərə normallaşdırır. Sxem cədvəlləri, sütunları, əlaqələri, indeksləri əhatə edir | Sabit sxem tələb etmir, çeviklik verir. Çox vaxt partition key işlədir. JSON, XML və digər sənəd formatları üçün əla uyğundur |
+| **Tranzaksiya** | ACID xüsusiyyətlərinə tam əməl edir | Horizontal miqyaslanma naminə bəzi ACID xüsusiyyətlərindən güzəştə gedir |
+| **Performans** | Əsasən diskdən asılıdır; sorğu optimallaşdırma indeks tələb edir | Aparat klasterinin ölçüsü, şəbəkə latency-si və tətbiqin sxemindən asılıdır |
+| **Miqyaslanma** | Ən asan **vertical** (aparat gücünü artırmaqla). Distributed sistemlər (sharding) əlavə səy tələb edir | **Horizontal** miqyaslanma üçün dizayn olunub — ucuz aparatın distributed klasterləri ilə |
+
+### Axtarış anbarları (Search)
+
+**Elasticsearch** — Big Data (ziyarət məlumatı, log analizi) üçün ən populyar axtarış sistemlərindəndir. "İsti" (warm) məlumatla, istənilən atributla situativ (ad hoc) sorğularla yaxşı işləyir.
+
+**Amazon OpenSearch Service** açıq mənbəli Elasticsearch klasterlərini idarə edir, **Kibana** vizuallaşdırma mexanizmi ilə gəlir. Log axtarışı və analizi — bank, oyun, marketinq, fırıldaqçılıq aşkarlanması kimi sahələrdə geniş istifadə olunur. NLP (natural language processing) əsaslı axtarış üçün **Amazon Kendra** kimi ML servisləri də var.
+
+### Strukturlaşdırılmamış məlumat: Hadoop
+
+Strukturlaşdırılmamış məlumat üçün **Hadoop** ideal variantdır — yaxşı miqyaslanır, çevikdir, adi istifadəçi avadanlığında işləyə bilir və ucuzdur. Hadoop **əsas və törəmə node (master/slave)** modelindən istifadə edir: məlumat törəmə node-lar arasında paylanır, əsas node isə sorğuları koordinasiya edir.
+
+Klaster qurulanda hər törəmə node **HDFS lokal disk anbarı** alır. Məlumata Hive, Pig, Spark kimi framework-lərlə sorğu göndərmək olar. Amma diqqət: lokal diskdəki məlumat yalnız həmin instansın ömrü boyu mövcud olur.
+
+Bir vacib nüans: HDFS-də saxlama edəndə **saxlamanı hesablama ilə bağlayırsan**. Anbarı genişləndirmək üçün yeni maşın əlavə etmək lazımdır, bu da hesablama gücünü də artırır. Maksimal çeviklik üçün **hesablamanı saxlamadan ayırmaq** və hərəsini müstəqil miqyaslamaq lazımdır. Məhz burada object storage köməyə gəlir.
+
+### Object storage
+
+Object storage məlumatı **object** adlı vahidlərlə **bucket**-larda saxlayır. Fayllar bloklara bölünmür — məlumat və metadata birgə saxlanılır. Bucket-dakı object sayı limitsizdir, onlara giriş API çağırışları (adətən HTTP GET/PUT) ilə edilir.
+
+Object storage düz ad məkanı (flat namespace) və miqyaslanma işlədir, idarəetmə xərcini azaldır. Cloud-da ən populyar data lake əsasıdır. Nümunələr: **Amazon S3, Azure Blob Storage, Google Cloud Storage.**
+
+### Vektor bazalar (VectorDB)
+
+Generativ AI və ML-in yüksəlişi ilə vektor bazalar çox populyarlaşdı. **Vektor məlumat** — çoxölçülü nöqtələrdir. Məsələn, şəkil, mətn və ya audio faylı **vektor təsvirinə** (rəqəmlər siyahısı) çevrilə bilər — bu təsvir orijinalın ən vacib xüsusiyyətlərini əks etdirir.
+
+Bu vektorlar oxşarlıq axtarışı (similarity search), qruplaşdırma, təsnifat kimi ML tapşırıqlarında işlədilir. Məsələn, müştəri təsnifatı sistemində vektor embedding-lər müştəriləri davranışına görə qruplaşdıra bilər — nəticədə fərdiləşdirilmiş təkliflər vermək olur.
+
+Üstünlükləri:
+
+- **Sürət və effektivlik:** oxşarlıq axtarışını ənənəvi bazalardan xeyli tez edir;
+- **Miqyaslanma:** böyük ML datasetləri üçün;
+- **ML/AI pipeline inteqrasiyası:** vektor məlumata birbaşa sorğu.
+
+Çatışmazlıqları:
+
+- **Mürəkkəblik:** çoxölçülü vektorların idarəsi çətindir;
+- **Resurs tələbi:** böyük datasetlərdə əhəmiyyətli hesablama gücü gərəkir;
+- **Yetkinliyin çatışmaması:** texnologiya nisbətən yenidir, ekosistem ənənəvi bazalar qədər yetkin deyil.
+
+### Blockchain anbarı
+
+Blockchain adətən kriptovalyutalarla assosiasiya olunsa da, məlumat idarəçiliyində inqilabi yanaşma təklif edir — **mərkəzsizləşdirilmiş məlumat yoxlaması.** Məsələn, blockchain əsaslı kadastr sistemində hər əmlak alqı-satqısı ümumi reyestrdə qeydə alınır və bütün iştirakçılar üçün dərhal yoxlanıla bilən olur.
+
+İki əsas xüsusiyyəti: **dəyişməzlik (immutability)** və **təhlükəsizlik.** Səhiyyədə blockchain xəstə məlumatının dəyişməz və təhlükəsiz qalmasını təmin edir. Tranzaksiyalar bloklara qruplaşır, hər blok əvvəlkinə bağlanaraq zəncir yaradır — bu da məlumatı sonradan dəyişməyi çox çətinləşdirir.
+
+Növləri:
+
+- **Public (açıq):** Ethereum — mərkəzsizləşdirilmiş tətbiqlər (DApps) və smart-kontraktlar üçün; hər kəs qoşula bilər;
+- **Private (özəl):** girişi məhdud, bir təşkilat idarə edir; məsələn, dərman istehsalının izlənməsi;
+- **Consortium (konsorsium):** bir neçə təşkilat birgə idarə edir; məsələn, yük daşıyan şirkətlərin qlobal yük izləmə şəbəkəsi.
+
+AWS blockchain-i servis kimi təklif edir: **Amazon QLDB** (dəyişməz reyestr bazası), **AMB (Amazon Managed Blockchain)**, R3 Corda, Ethereum, Hyperledger.
+
+### Axın anbarları (Streaming storage)
+
+Axın məlumatı fasiləsiz gəlir — başı və sonu yoxdur. Birja qiymətləri, sürücüsüz avtomobillər, ağıllı evlər, e-ticarət, oyunlar — hamısı real-time məlumat istehsal edir. Netflix baxdığınız kontentə əsasən real-time tövsiyə verir, Lyft sərnişini sürücü ilə real-time bağlayır.
+
+Bu məlumatı saxlamaq çətindir, çünki anbar tutumunu qabaqcadan bilmək olmur və sürət çox yüksəkdir. Ən populyar servislər:
+
+- **Amazon Kinesis** — üç əsas servis:
+  - *KDS (Kinesis Data Streams)* — xam axını saxlayır, sonrakı emal üçün;
+  - *KDF (Kinesis Data Firehose)* — yazıları S3, Elasticsearch, Redshift, Splunk kimi mühitlərə köçürür, avtomatik buferləyir;
+  - *KDA (Kinesis Data Analytics)* — Apache Flink ilə axın analitikası aparır;
+- **Amazon MSK (Managed Streaming for Kafka)** — cloud-da idarə olunan Kafka klasteri;
+- **Apache Flink** — həm məhdud, həm bitməyən axınları emal edən açıq mənbəli platforma;
+- **Apache Spark Streaming** — giriş axınlarını paketlərə bölüb Spark nüvəsinə göndərir, **DStream** abstraksiyalarından istifadə edir;
+- **Apache Kafka** — producer topic-ə məlumat dərc edir, consumer abunə olub çıxarır.
+
+### Cloud saxlama variantları qısaca
+
+- **AWS:** S3 (object), EBS (block-level, EC2 üçün), RDS (idarə olunan relational), S3 Glacier (arxiv);
+- **GCP:** Cloud Storage (object), Persistent Disk (block), Cloud SQL (idarə olunan relational), Bigtable (NoSQL);
+- **Azure:** Blob Storage (object), File Storage (SMB fayl paylaşımı), SQL Database (idarə olunan relational), Disk Storage (block).
+
+---
+
+## Emal və Analiz (Processing & Analytics)
+
+Data analytics — məlumatı toplama, çevirmə və vizuallaşdırma vasitəsilə dəyərli nəticələr (insights) çıxarma prosesidir. İki əsas emal tərzi var:
+
+- **Batch (paket) emal** — böyük həcmli "soyuq" (cold) məlumat sorğulanır, cavab saatlarla gələ bilər. Məsələn, aylıq hesabat çıxarmaq. **MapReduce əsaslı** sistemlər (Hadoop) bunun nümunəsidir;
+- **Real-time / streaming emal** — kiçik həcmli "isti" (hot) məlumat sorğulanır, cavab tez gəlir. Hər yeni yazıya cavab olaraq funksiyalar inkremental yenilənir (sensor, monitorinq, audit logları).
+
+### Bir AWS ETL pipeline nümunəsi
+
+Tipik data lake ETL pipeline-ında hadisələr belə gedir: müxtəlif mənbələr (məsələn, web app serverləri) log faylları yaradır, bunlar **S3**-də saxlanılır. Sonra **Amazon EMR (Elastic MapReduce)** ilə çevrilir (Hive, Pig, Spark istifadə edərək) və yenidən S3-ə yüklənir. Çevrilmiş fayllar `COPY` əmri ilə **Redshift**-ə yüklənib **QuickSight** ilə vizuallaşdırılır. **Amazon Athena** isə S3-dəki məlumatı birbaşa, mövcud axını dəyişmədən sorğulamağa imkan verir.
+
+### Populyar emal alətləri
+
+- **Apache Hadoop** — distributed emal arxitekturası; tapşırığı server klasterinə ötürür, böyük işi kiçik tapşırıqlara bölüb paralel emal edir. Dözümlülük üçün dizayn olunub — hər işçi node statusunu əsas node-a bildirir;
+- **Apache Spark** — yaddaşda (in-memory) emal framework-ü; MPP sistemidir. **DAG (directed acyclic graph)** ilə mərhələləri təsvir edir, məlumat kadrlarını yaddaşda saxlayaraq I/O-nu minimuma endirir;
+- **HUE (Hadoop User Experience)** — brauzer UI-dan sorğu və skript işlətmək üçün; komanda sətri əvəzinə;
+- **Pig** — xam məlumatı strukturlaşdırılmış formata çevirmədən əvvəl emal etmək üçün; ETL əməliyyatlarına yaxşı uyğundur; **Pig Latin** skript dilindən istifadə edir;
+- **Hive** — Hadoop klasteri üzərində işləyən açıq mənbəli data warehouse; **HQL (Hive Query Language)** — SQL-ə oxşar dil işlədir; Java kimi dillərdə proqram yazma mürəkkəbliyini abstraktlaşdırır;
+- **Presto** — Hive-a oxşar, amma çox daha sürətli sorğu nüvəsi; **ANSI SQL** dəstəkləyir, sorğuları yaddaşda icra edir. Diqqət: çoxlu yaddaş tələb edir, yaddaş dolanda iş yenidən başladılır;
+- **HBase** — Hadoop layihəsinin NoSQL bazası; HDFS üzərində işləyir, məlumatı sütun formatında sıxılmış saxlayır;
+- **Apache Zeppelin** — Hadoop üzərində qurulmuş web-redaktor ("Zeppelin notebook"); backend dil interpretatoru konsepti ilə istənilən dili qoşmaq olar;
+- **Ganglia** — Hadoop klaster monitorinq aləti; performansa təsir etmədən klaster serverlərini izləyir;
+- **JupyterHub** — Jupyter-in çoxistifadəçili variantı; data science mütəxəssisləri üçün web-IDE.
+
+### Cloud-da emal servisləri
+
+- **AWS:** EMR (cloud Hadoop), Glue (idarə olunan ETL, data catalog), Athena (serverless SQL sorğu);
+- **GCP:** BigQuery (serverless warehouse), Cloud Dataflow (Apache Beam əsaslı, batch+stream), Cloud Dataprep (vizual məlumat hazırlığı);
+- **Azure:** HDInsight (idarə olunan open-source framework-lər), Databricks (Apache Spark əsaslı), Synapse Analytics (Big Data + warehouse birləşməsi).
+
+---
+
+## Vizuallaşdırma (Data Visualization)
+
+Analitika biznes suallarına cavab verir: müştəri üzrə gəlir, region üzrə mənfəət, reklam trafiki və s. İki əsas problem: **həllin qiyməti** və **hazırlanma vaxtı.** Populyar alətlər:
+
+- **Amazon QuickSight** — cloud BI aləti; **SPICE** (Super-fast, Parallel, In-memory Calculation Engine) cache nüvəsi işlədir; ML əsaslı avtoproqnoz verir;
+- **Kibana** — açıq mənbəli; Elasticsearch ilə inteqrasiya; log analizi və geospatial dəstək;
+- **Tableau** — ən populyar BI alətlərindən; vizual sorğu nüvəsi, **drag-and-drop** interfeys;
+- **Spotfire** — yaddaşda emal; məlumatı coğrafi xəritəyə salıb dərc edə bilir; avtomatik vizuallaşdırma tövsiyəsi;
+- **Jaspersoft** — self-service hesabat və analitika, drag-and-drop konstruktor;
+- **Power BI** — Microsoft-un populyar BI aləti; self-service analitika.
+
+---
+
+## Big Data arxitekturasını layihələndirmək
+
+İndi isə maraqlı hissəyə keçək — bütün bu komponentləri necə birləşdirmək. Əvvəlcə hansı arxitektura üslubunun sənə uyğun olduğunu anlamaq lazımdır. Bunun üçün **biznes ssenarisindən geriyə doğru** hərəkət et və şərti bir istifadəçi personası yarat.
+
+Persona müəyyən etmək üçün suallar: hansı komandada işləyirlər? Data analiz bacarıqları nə səviyyədədir? Hansı alətlərdən istifadə edirlər? İşçilərə, müştərilərə, yoxsa partnyorlara fokuslanmalısan?
+
+Bir ticarət şəbəkəsi nümunəsində personalar belə ola bilər:
+
+- **Product manager:** yalnız öz məhsulunun satış həcmini görür;
+- **Mağaza direktoru:** yalnız öz mağazasını görür;
+- **Administrator:** bütün məlumata giriş;
+- **Data analitik:** şəxsi məlumat istisna olmaqla hər şeyə giriş;
+- **Müştəri saxlama meneceri:** müştəri trafiki qanunauyğunluqlarını anlamalıdır;
+- **Data science mütəxəssisi:** xam və emal olunmuş məlumata giriş — tövsiyə və proqnoz üçün.
+
+Sonra bu personalar üçün biznes ssenariləri yaz: alış aktivliyi trendləri, xərci artan/azalan müştərilər üzrə kateqoriyalar, demoqrafiyanın xərcə təsiri, direkt marketinqin effektivliyi.
+
+Növbəti mərhələ — **giriş şablonları və saxlama siyasətlərini** anlamaq: hesabatlar nə tezliklə sorğulanır? Aktuallıq gözləntisi nədir? Məlumat nə qədər saxlanmalıdır? Nə vaxt "köhnəlmiş" sayılır?
+
+**Compliance** (normativ uyğunluq) da vacibdir: hansı compliance tələbləri var? Data locality/gizlilik tələbləri? Kim hansı yazıları görə bilər? Tələb üzrə silinmə necə təmin olunur? Məlumat harada saxlanılır (lokal/regional/qlobal)?
+
+Nəhayət, **ROI (okupasiya)**: hansı əsas biznes prosesləri dəstəklənir? Latency biznes qərarlarına necə təsir edir? Uğuru necə ölçəcəksən?
+
+> Son nəticədə sənə çevik, paralelizm tətbiq edən, komponentləri müstəqil miqyaslana bilən (həm yuxarı, həm aşağı) bir arxitektura lazımdır.
+
+İndi əsas arxitektura pattern-lərinə baxaq.
+
+---
+
+## Data Lake (məlumat gölü)
+
+Data lake — korporasiyanın strukturlaşdırılmış və strukturlaşdırılmamış müxtəlif tipli məlumatını yığan **mərkəzi anbardır.** Konsept bütün korporativ məlumatı ucuz saxlama sisteminə (məsələn S3) köçürmək üçün yarandı. Məlumata ümumiləşdirilmiş API-lər və açıq fayl formatları (**Apache Parquet, ORC**) ilə giriş olur. Məlumat **olduğu kimi** ("as is"), qabaqcadan sxemə çevrilmədən saxlanılır — bu da toplama sürətini artırır.
+
+Data lake təşkilatda **vahid həqiqət mənbəyi (single source of truth)** olur. Əsas üstünlükləri:
+
+- **Müxtəlif mənbələrdən toplama:** relational, non-relational bazalar və axınlar — hamısı bir mərkəzi qəbulediciyə;
+- **Effektiv saxlama:** istənilən struktur, məcburi sxem olmadan;
+- **Həcm üzrə miqyaslanma:** saxlama və hesablama qatları ayrıldığından hər komponent ayrıca miqyaslanır;
+- **Müxtəlif mənbələrə analitika:** "schema on read" ilə mərkəzi data catalog yaradıb tez ad hoc analiz.
+
+AWS-də tipik data lake: məlumat müxtəlif mənbələrdən S3-ə toplanır. Xam qatda hər şey orijinal formatda saxlanılır. Sonra **AWS Glue** (Spark əsaslı serverless kataloqlaşdırma və ETL) ilə kataloqlaşdırılıb çevrilir. **Glue bot** mənbələri avtomatik skan edir, formatları müəyyən edir, sxemləri təyin edir və data catalog-u metadata ilə doldurur. Data mühəndisləri **Athena** ilə ad hoc sorğu, BI analitikləri **QuickSight/Tableau/Power BI** ilə vizuallaşdırma, data analitikləri isə **SageMaker** ilə ML edir.
+
+### Data lake-ın problemi: "bataqlıq"
+
+Zamanla məlum oldu ki, data lake-lərin məhdudiyyəti var. Ucuz saxlama olduğundan şirkətlər ora nə qədər çox məlumat yığmağa çalışır və **məlumat keyfiyyəti + giriş idarəçiliyi** problemləri ucbatından göllər tez "bataqlığa" (data swamp) çevrilir.
+
+Bunu həll etmək üçün təşkilatlar məlumatın kiçik hissələrini aşağıdakı bir warehouse-da emal etməyə başladı. Amma bu **iki-sistemli arxitektura** (data lake + data warehouse) davamlı data engineering tələb edir, hər emal mərhələsində sıradan çıxma riski var və məlumat iki dəfə saxlandığından **xərc iki qat** olur. Məhz burada növbəti pattern doğuldu.
+
+---
+
+## Data Lakehouse (göl-anbar)
+
+Lakehouse arxitekturası ənənəvi data lake ilə data warehouse arasındakı boşluğu doldurur — hər ikisinin güclü tərəflərini birləşdirir. Data lake-in nəhəng tutumunu (açıq formatlarda saxlama) warehouse-un SQL sadəliyi və etibarlılığı ilə birləşdirir. Əsas xüsusiyyətləri:
+
+- **Açıq formatlarda saxlama** — qarşılıqlı əlaqə və çeviklik;
+- **Saxlama və hesablamanın ayrılması** — müstəqil miqyaslanma;
+- **Tranzaksiya zəmanətləri** — ənənəvi bazalar kimi etibarlı konkurent giriş;
+- **Müxtəlif istifadə ehtiyaclarının dəstəyi** — batch-dən real-time-a qədər;
+- **Təhlükəsizlik və rasional idarəçilik** — giriş nəzarəti və compliance;
+- **Vahid platforma** — ETL, ML, BI, hesabat — hamısı bir yerdə;
+- **Yaxşılaşdırılmış sorğu performansı** — indeksləmə, cache, qruplaşdırma;
+- **Ucuz miqyaslanma** və **çevik məlumat idarəçiliyi.**
+
+AWS-də bir nümunə **Redshift Spectrum** işlədir — bu, məlumatı warehouse-a köçürmədən data lake-dən (S3) sorğulamağa imkan verir. Yəni Redshift işlədirsənsə, bütün məlumatı klasterə yükləmədən Spectrum ilə birbaşa S3-dən sorğulaya və warehouse məlumatı ilə birləşdirə bilərsən.
+
+Konkret ssenari: məlumat lokal **EDW (Enterprise Data Warehouse)**-dan S3 API ilə S3-ə toplanır. AWS Glue metadata-nı, həmçinin kredit tarixçəsi və kredit məlumatını ayrıca saxlayır. Kreditləşmə şöbəsi kredit məlumatına yalnız-oxu (read-only), skoring şöbəsi kredit tarixçəsinə read-only giriş alır. Kredit risk analitikinə kredit məlumatı lazım olsa, məhdud sahə dəsti ilə read-only sxem verilir.
+
+Amma coğrafi olaraq bölünmüş biznes bölmələri olan mürəkkəb təşkilatlar üçün lakehouse da az gəlir. Bu bölmələr artıq öz göl və anbarlarını qurub. Mərkəzi korporativ göl yaratmaq çətindir, çünki dəyişikliklər yavaş yayılır. Həll — **domen yönümlü, mərkəzsizləşdirilmiş** yanaşma. Bax burada data mesh gəlir.
+
+---
+
+## Data Mesh (məlumat şəbəkəsi)
+
+Data mesh-in lakehouse-dan əsas fərqi: məlumat qəsdən **paylanmış** qalır — bir mərkəzdə birləşmir. Data mesh iri təşkilata bir neçə daxili göl/göl-anbarı bağlamağa və məlumatı partnyorlar, elmi mühit, hətta rəqiblərlə paylaşmağa imkan verir.
+
+Data mesh dörd fundamental prinsipə əsaslanır:
+
+- **Domen əsaslı mərkəzsizləşdirilmiş sahiblik:** məlumat sahibliyi və arxitektura qərarları konkret biznes sahələrinə verilir. Hər sahə öz məlumatına cavabdehdir;
+- **Məlumata məhsul kimi baxmaq (data as a product):** məlumat adi resurs deyil, son istifadəçiyə fayda verən **dəyərli aktiv** kimi qulluq görür;
+- **Federativ idarəçilik + mərkəzləşdirilmiş audit:** mərkəzsiz idarəçiliklə ümumi nəzarət arasında balans; sahələr öz məlumatını idarə edir, mərkəz audit və compliance üçün nəzarəti saxlayır;
+- **Ümumi giriş (self-service):** məlumatın təşkilat daxilində əlçatan və istifadəyə yararlı olması.
+
+Əsas konsept: **məlumat domenləri data lake-də node kimi təmsil olunur.** Producer bir və ya bir neçə data product-u mərkəzi kataloqa yazır. Product paylaşımı federativ nəzarətə tabedir. Consumer isə kataloqda axtarış aparıb data product-a giriş alır. AWS-də bu, mərkəzi hesab (product qeydiyyatı), giriş teq-ləri, icazə saxlama və producer/consumer hesablarına təhlükəsizlik siyasəti ilə qurulur.
+
+---
+
+## Streaming (axın) arxitekturası
+
+Real-time analitika artıq hər biznes üçün vacibdir. Axın məlumatı — video/audio, tətbiq logları, sayt ziyarətləri, IoT telemetriyası — hamısı sürətli toplama və real-time emal tələb edir. Tipik ssenari beş mərhələdən ibarətdir:
+
+1. **Data generation:** mənbələr fasiləsiz məlumat istehsal edir;
+2. **Ingestion:** məlumat toplama mərhələsindən axın anbarına keçir;
+3. **Streaming storage:** giriş məlumatı etibarlı saxlanılır, real-time emala açıq olur;
+4. **Stream processing:** filtrasiya, aqreqasiya, analiz aparılır;
+5. **Data output:** emal olunmuş məlumat təyinat yerinə (baza, göl və s.) göndərilir.
+
+Streaming arxitekturasının fərqi — fasiləsiz, çox yüksək sürətli axını emal etməkdir. Məlumat çox vaxt yarı-strukturludur və mürəkkəb emal tələb edir. Real-time-da qanunauyğunluqları (xüsusən zaman sıraları — time series) müəyyən etmək kritik vacibdir.
+
+AWS-də bir külək stansiyası nümunəsi: külək mühərriklərinin işini və sürətini analiz etmək üçün məlumat **AWS IoT Greengrass** ilə **Kinesis Data Streams**-ə toplanır (bu, məlumatı bir ilə qədər saxlaya və yenidən oynada bilir). Məlumat **Lambda** ilə emal olunub **S3**-ə saxlanılır (sonra **Firehose** ilə analitika). Real-time sorğular **Kinesis Data Analytics for SQL** ilə göndərilir, pipeline **Kinesis Data Analytics for Java Flink** ilə avtomatlaşdırılır, nəticə **OpenSearch**-ə saxlanılır. **Kibana** ilə real-time vizuallaşdırma edilir.
+
+---
+
+## Hansı arxitekturanı seçməli?
+
+Seçim biznes tələblərindən, məlumat strategiyasından və texniki imkanlardan asılıdır. Qısa xülasə:
+
+- **Data Lake** — böyük həcmli xam məlumatı orijinal formatda saxlamaq üçün.
+  - *Üstünlük:* yüksək miqyaslanma, çeviklik, ucuz saxlama;
+  - *Çatışmazlıq:* nəzarətsiz qalanda "bataqlığa" çevrilir;
+  - *Ssenari:* Big Data analitikası, ML, ucuz saxlamada strukturlaşdırılmış+strukturlaşdırılmamış məlumat.
+- **Data Lakehouse** — göl və anbar elementlərini birləşdirir.
+  - *Üstünlük:* ucuz miqyaslanma + güclü sxem dəstəyi + ACID tranzaksiya;
+  - *Çatışmazlıq:* realizasiyası mürəkkəbdir;
+  - *Ssenari:* Big Data emalı + ənənəvi BI-ın bir platformada olması, real-time analitika.
+- **Data Mesh** — mərkəzsizləşdirilmiş arxitektura və sahiblik.
+  - *Üstünlük:* dinamik, çevik idarəçilik, məlumatın demokratikləşməsi;
+  - *Çatışmazlıq:* idarəçilik yanaşmasını dəyişmək tələb edir;
+  - *Ssenari:* bir neçə müstəqil komandalı böyük təşkilatlar.
+
+Qərar üçün əsas faktorlar:
+
+- **Təşkilat strukturu:** mərkəzləşmiş, yoxsa mərkəzsizləşmiş (data mesh ikinciyə uyğundur);
+- **Həcm və müxtəliflik:** çox müxtəlif üçün göl, strukturlu mühit üçün göl-anbar;
+- **Analitik ehtiyaclar:** real-time + Big Data birləşməsi lazımdırsa — lakehouse;
+- **İdarəçilik və compliance:** lakehouse adətən güclü mexanizm verir;
+- **Texniki kvalifikasiya:** mesh və lakehouse xüsusi bacarıq tələb edir.
+
+> Ən yaxşı seçim çox vaxt **hibrid yanaşma** ola bilər — hər arxitekturanın güclü tərəfini götürmək.
+
+---
+
+## Ən yaxşı təcrübələr (Best Practices)
+
+AWS referens data lake arxitekturasını yoxlamaq üçün istifadə olunan meyarlar beş kateqoriyaya bölünür:
+
+**Təhlükəsizlik:**
+- Məlumatı təsnif et və resurs əsaslı giriş nəzarəti ilə qoruma siyasəti təyin et;
+- SSO (single sign-on) ilə etibarlı identifikasiya əsası qur;
+- Audit üçün mühit və məlumat trassirovkası aç;
+- Bütün qatlarda SSL və şifrələmə tətbiq et (həm ötürmədə, həm saxlamada);
+- Production bazalara yazma girişini blokla.
+
+**Etibarlılıq (Reliability):**
+- Kataloqlaşdırma əsaslı avtomatik profilləmə ilə məlumat gigiyenasını saxla;
+- Aktiv həyat dövrünü (lifecycle) idarə et;
+- Kataloqda hərəkət tarixçəsi saxlayaraq məlumat mənşəyini (lineage) qoru;
+- ETL tapşırıqlarında avtomatik bərpa ilə dözümlülük layihələndir.
+
+**Performans:**
+- Təmizlik qatı formalaşdırmaq üçün məlumat profilləmə et;
+- Saxlamanı davamlı optimallaşdır — Parquet sıxılma, secləşdirmə (partitioning), fayl ölçüsü optimallaşdırması.
+
+**Xərc optimizasiyası:**
+- İstehlak modeli qəbul et, sorğu tipini müəyyən et (ad hoc vs sürətli);
+- İstifadə olunmayan məlumatı sil, saxlama qaydaları təyin et;
+- Göl həllərində hesablamanı saxlamadan ayır;
+- Fərqli mənbələr üçün fərqli miqrasiya strategiyaları;
+- İdarə olunan servislərdən istifadə edərək sahiblik xərcini azalt.
+
+**Əməliyyat mükəmməlliyi:**
+- "Operations as code" strategiyası — CloudFormation, Terraform, Ansible;
+- Prosesləri avtomatlaşdır — Step Functions və ya Apache Airflow ilə orkestrasiya qatı;
+- Davamlı monitorinq ilə sıradan çıxmanı erkən proqnozlaşdır;
+- İş yükünün vəziyyətinə nəzarət et.
+
+AWS referens arxitekturasında əlavə komponentlər: **KMS** (şifrələmə), **IAM** (giriş idarəsi), **Macie** (şəxsi məlumat aşkarlanması — PCI DSS kimi normativlər üçün), **CloudWatch** (monitorinq), **CloudTrail** (audit).
+
+---
+
+## Sona qədər: xam məlumatdan qərara
+
+Gəlin yolu bir daha yığcam gözdən keçirək. **Əvvəl** — hər yerdən nəhəng, dağınıq, mənasız görünən məlumat axını gəlirdi; nə saxlamağı, nə oxumağı bilmirdin. **Sonra** — düzgün pipeline ilə həmin xaos toplanır, saxlanılır, emal olunur, vizuallaşır və nəticədə biznesi irəli aparan qərara çevrilir.
+
+Əsas dərs isə budur: **tək bir alət hər şeyi həll etmir.** Hər tapşırıq üçün doğru alət var — və data lake, lakehouse, data mesh kimi arxitekturalar sənə bu alətləri düzgün birləşdirmək çevikliyini verir. Latency, throughput və xərc — bu üç qüvvə arasında balans tapmaq sənin əsas işindir.
+
+Bu fəsildə məlumatın toplanmasından tutmuş referens arxitekturaya qədər bütün komponentləri gördük. Növbəti mərhələ isə daha maraqlıdır: topladığın tarixi məlumat əsasında **gələcəyi proqnozlaşdırmaq** — yəni machine learning. Çünki məlumatın əsl gücü keçmişi görməkdə yox, gələcəyi təxmin etməkdədir.
+
+Bəs sizin təşkilatınız məlumatını hansı arxitektura ilə saxlayır — göl, göl-anbar, yoxsa hələ də tək bir RDBMS-in yükü altında əzilir?
+
+# Maşın öyrənmə arxitekturası: modeldən məhsula qədər bütün yol
+
+Əvvəlki yazılarda böyük data-nı necə toplamaq, emal etmək və bizness üçün faydalı analitikaya çevirmək barədə danışmışdıq. Ənənəvi bizness modelində qərar verən şəxs keçmiş dövrlərin datasına baxır, öz təcrübəsinə söykənərək şirkətin gələcək kursunu qurur. Amma məsələ təkcə istiqamət vermək deyil — həm də istifadəçi təcrübəsini yaxşılaşdırmaqdır: müştərinin ehtiyacını qabaqcadan görüb ödəmək, gündəlik qərarları (məsələn, kredit müraciətlərinin təsdiqi) avtomatlaşdırmaq.
+
+Problem burada başlayır: mövcud data-nın həcmi o qədər böyükdür ki, insan beyni onu emal edib proqnoz vermək iqtidarında deyil. Məhz bu nöqtədə **süni intellekt (AI)** və **maşın öyrənmə (ML)** köməyə gəlir.
+
+Bu yazıda ML-in nə olduğundan başlayıb, tam bir arxitektura yolunu gəzəcəyik — data hazırlığından, model seçimindən tutmuş MLOps, dərin öyrənmə və NLP-yə qədər. Uzun yoldur, amma sona çatanda ML pipeline-ının hər halqasını başa düşəcəksiniz.
+
+---
+
+## AI və ML — eyni şey deyil
+
+Əvvəlcə bir qarışıqlığı aradan qaldıraq, çünki bu iki termin tez-tez bir-birinə qarışdırılır.
+
+**Süni intellekt (AI)** daha geniş konsepsiyadır — maşınların müxtəlif tapşırıqları "ağıllı" şəkildə yerinə yetirməsidir. Siri və Alexa buna misaldır: sualı başa düşür, cavab formalaşdırır.
+
+**Maşın öyrənmə (ML)** isə AI-ın alt çoxluğudur — kompüterin data əsasında öyrənmə və qərar vermə qabiliyyətinə aiddir.
+
+> ML tarixi datanı analiz edərək gələcəyi proqnozlaşdırır. AI isə bu proqnozu "ağıllı davranışa" çevirən daha böyük çətirdir.
+
+Bu gün bir çox korporasiya ML-ə investisiya qoyur — əsas motiv sürətdir, xüsusən generativ AI (GenAI) sayəsində. ML tez bir zamanda şirkətləri fərqləndirən texnologiyaya çevrilir: yeni məhsullar, xidmətlər və bizness modelləri yaratmağa, innovasiya ilə rəqabət üstünlüyü qazanmağa imkan verir.
+
+---
+
+## Maşın öyrənmə nədir və nə üçün lazımdır?
+
+ML texnologiyadan istifadə edərək keçmiş faktiki data əsasında yeni tendensiyalar aşkarlayır və riyazi proqnoz modelləri qurur. Bəs hansı problemlərdə əsl işə yarayır?
+
+- **Mürəkkəb qaydalar yaratmaq:** Koda dəqiq məntiq yazmağın mümkün olmadığı hallar. Məsələn, şəkil və ya nitqdə insan emosiyalarını tanımaq — bunu `if/else` ilə yaza bilməzsiniz.
+- **Böyük həcmli data analizi:** İnformasiya insanın effektiv emal edə bilməyəcəyi qədər çoxdursa. İnsan spam-ı tanıya bilər, amma milyonlarla məktubu əl ilə yoxlaya bilməz.
+- **Dinamik uyğunlaşma:** Personalizasiya üçün lazım olan data yalnız real vaxtda, dinamik gəlirsə. Məsələn, fərdi məhsul tövsiyələri və ya vebsayt personalizasiyası.
+- **Axın (streaming) data emalı:** Böyük datanın ani analizi tələb olunan hallar — məsələn fırıldaqçılığın aşkarlanması və ya təbii dilin emalı (NLP).
+
+### Real sənaye ssenariləri
+
+ML-in harada işlədiyini görmək üçün bir neçə konkret nümunə:
+
+- **Proqnozlaşdırılan texniki xidmət (predictive maintenance):** Sensor datası əsasında komponentlərin sıradan çıxmasını qabaqcadan görmək. Avtoparklarda, istehsalat avadanlığında və IoT sensorlarında qalıq istismar müddətini (RUL — Remaining Useful Life) qiymətləndirmək üçün istifadə olunur. Avtomobil sənayesində və istehsalatda geniş yayılıb.
+- **Tələb proqnozu:** Tarixi datadan istifadə edərək istehsal, qiymət, ehtiyat idarəçiliyi barədə daha dəqiq qərarlar vermək. Artıq ehtiyatı azaldıb tullantını minimuma endirir. Maliyyə, istehsalat, pərakəndə satışda tez-tez rast gəlinir.
+- **Fırıldaqçılıq aşkarlanması:** Mümkün fırıldaqçı əməliyyatları avtomatik tanıyıb yoxlama üçün işarələmək. Maliyyə xidmətləri və onlayn pərakəndə satışda tətbiq olunur.
+- **Kredit riskinin proqnozu:** Fərdi kredit müraciətlərini analiz edib kreditin qaytarılma ehtimalını (kredit defoltu) qiymətləndirmək. Qərəzliliyi aşkarlayıb normativ uyğunluğu təmin edir.
+- **Sənəd analizi və data çıxarışı:** Əlyazma və rəqəmsal sənədlərdəki mətni tanıyıb təsnifat üçün informasiya çıxarmaq. Səhiyyə, hüquq, mühəndislik və təhsildə geniş istifadə olunur.
+- **Personalizasiya olunmuş tövsiyələr:** Tarixi data əsasında fərdi tövsiyələr. Pərakəndə satış və təhsildə.
+- **Churn (müştəri itkisi) proqnozu:** Müştərilərin xidmətdən imtina etmə ehtimalını qiymətləndirmək. Pərakəndə satış, təhsil və SaaS provayderlərində.
+
+ML-in əsas konsepsiyası sadədir: alqoritmə bir **öyrədici dataset** verirsən, sonra o, yeni data üzərində proqnoz qurur. Məsələn, fond bazarının tarixi trendlərini modelə versən, o, 6 ay – 1 illik bazar dəyişikliklərini proqnozlaşdıra bilər.
+
+Amma vacib bir incəlik var: ML sistemlərində **data ilə kod sinxron olmalıdır**. Data zamanla dəyişir (çünki müxtəlif mənbələrdən gəlir), kod da onunla birlikdə dəyişməlidir. Sistematik yanaşma olmasa, kod və dəyişmiş data arasında uyğunsuzluq yaranır — bu isə modeli real işə salanda problemə çevrilir, nəticələri izləmək və təkrar etmək çətinləşir.
+
+---
+
+## Maşın öyrənmənin növləri
+
+ML kompüterlərə hər şeyi proqramlaşdırmadan yeni informasiya öyrənməyə imkan verir. Əslində sən kompüterə *necə öyrənməyi* izah edirsən.
+
+Bunu bir iti trik öyrətmək kimi düşün: nə etməli olduğunu göstərirsən, it öyrənir, sonra özü icra edir. ML də oxşardır — kompüter datadan öyrənir, sonra öyrəndiyini qərar vermək üçün istifadə edir.
+
+İndi əsas paradiqmaları gəzək.
+
+### Öyrədicili öyrənmə (supervised learning)
+
+Alqoritmə datanın və düzgün cavabların (hədəflərin) məlum olduğu öyrədici nümunələr verilir. Alqoritm bu nümunələrdən girişi düzgün nəticə ilə əlaqələndirməyi öyrənir, sonra eyni atributlu yeni data üçün hədəf dəyəri proqnozlaşdırır.
+
+Təsnifat və reqressiya məsələləri üçün istifadə olunur. Məsələn: məktubları spam və vacib olaraq ayırmaq, və ya evin xüsusiyyətlərinə görə qiymətini proqnozlaşdırmaq.
+
+### Öyrədicisiz öyrənmə (unsupervised learning)
+
+Alqoritm nəhəng həcmli data alır və orada özü qanunauyğunluq, əlaqə axtarır. İnsan iştirakı tələb olunmur — məsələn sənədlərin məzmununa görə avtomatik təsnifatı.
+
+Model **etiketlənməmiş (unlabeled)** data üzərində öyrənir. Qruplaşdırma (clustering), ölçü azaltma (dimensionality reduction) və sıxlıq qiymətləndirməsində tətbiq olunur. Xəbər agentlikləri və hüquq firmaları böyük data həcmlərini avtomatik təsnif etmək, rəqəmsal arxivləri idarə etmək üçün bundan istifadə edir — məsələn oxucuya oxşar məqalələr tövsiyə etmək.
+
+### Yarı-öyrədicili öyrənmə (semi-supervised learning)
+
+Yuxarıdakı iki növü birləşdirir: az miqdarda **etiketlənmiş** və çoxlu **etiketlənməmiş** data. Etiketlənmiş data almaq baha və ya çox vaxt aparandırsa xüsusilə faydalıdır.
+
+Biotibb bunun klassik nümunəsidir. Tibbi şəkillərin etiketlənməsi çox vaxt və resurs tələb edir. Model əvvəl kiçik etiketlənmiş şəkil dəsti üzərində öyrənir, sonra daha böyük etiketlənməmiş dəst üzərində tənzimlənir — minimum xərclə maksimum fayda.
+
+### Gücləndirici öyrənmə (reinforcement learning)
+
+Bu növ **agentləri** (kompüter proqramları) verilmiş mühitdə ardıcıl qərar verməyə öyrədir. Məqsəd: agent zamanla mümkün maksimum məcmu mükafatı əldə edəcək ən yaxşı hərəkətləri öyrənsin. Agent hərəkət edir, əks-əlaqə (mükafat və ya cəza) alır və strategiyasını korrektə edir.
+
+Avtonom robototexnika, oyunlar (məsələn AlphaGo) və tövsiyə sistemlərində istifadə olunur. Sürücüsüz avtomobillər yolda hərəkət edərkən ətraf mühitə görə hərəkətlərini korrektə edir: təhlükəsiz, effektiv hərəkət üçün müsbət, arzuolunmaz hərəkət üçün mənfi gücləndirmə alır.
+
+### Öz-özünə nəzarətli öyrənmə (self-supervised learning)
+
+Öyrədicisiz öyrənmənin bir növüdür — alqoritm etiketləri data-nın özündən generasiya edir. Tez-tez "əskik data fraqmentlərini proqnozlaşdırmaq" kimi əməliyyatları əhatə edir.
+
+NLP və şəkil tanımada populyardır: böyük dataset üzərində modeli əvvəlcədən öyrədib (pre-training), sonra konkret tapşırığa uyğunlaşdırmaq. Şəkil emalında ardıcıllığın növbəti kadrını proqnozlaşdırmaq üçün istifadə oluna bilər — bu, hərəkəti başa düşən modellər yaratmağı asanlaşdırır.
+
+### Çox-nümunəli öyrənmə (multi-instance learning)
+
+Burada hər data nöqtəsi bir **"torba" (bag)** olur — içində bir neçə nümunə (subdata nöqtələri) var. Məqsəd: yalnız torba səviyyəsindəki etiketlərə çıxışın olduğu halda torbalar üzərində öyrənmək. Yeni dərman axtarışı, şəkil təsnifatında tətbiq olunur.
+
+E-ticarət nümunəsi: model müştərinin sessiya (torba) ərzində məhsul alacağını proqnozlaşdıra bilər — səhifə baxışları, kliklənən məhsullar, səhifədə keçirilən vaxt kimi nümunələrdən istifadə edir. Sessiya etiketi (torba səviyyəsi) alışın baş verib-vermədiyini göstərir.
+
+> Bu qədər müxtəlif paradiqma ML-i universal sahəyə çevirir. Sirr düzgün növü seçməkdədir — mövcud data-ya və həll olunan məsələyə uyğun olanı.
+
+---
+
+## Data science və ML — ayrılmaz cütlük
+
+ML-in bütün mahiyyəti data ilə işləməkdir. Öyrədici datanın keyfiyyəti modelin uğurunun ən vacib şərtidir. Keyfiyyətli data = daha dəqiq model = düzgün proqnoz.
+
+Amma datada tez-tez nöqsanlar olur: əskik dəyərlər, səs-küy (noise), sürüşmə (bias), kənar dəyərlər. Data araşdırması bu problemləri aşkarlayır. Data science bunları əhatə edir: data toplama, hazırlıq, analiz, ilkin emal və **əlamət generasiyası (feature engineering)**.
+
+### Data hazırlığı — vaxtın 80%-i
+
+Data hazırlığı model qurmanın ilk addımıdır və bütün model işləmə vaxtının **80%-nə** qədərini alır. "Xam" data adətən "çirklidir" — boşluqlar, səhvlər, kənar dəyərlər.
+
+Vacib qayda: **data hazırlığı bizness-məsələni başa düşməkdən başlamalıdır.** Data science mütəxəssisləri tez-tez dərhal kod yazıb nəticə almağa can atır. Amma bizness-məsələni aydın anlamadan alınan nəticələr çox güman məsələyə uyğun gəlməyəcək. Əvvəl sadə istifadəçi hekayəsi və bizness-məqsəd, sonra data.
+
+Data hazırlığı adətən bu addımları əhatə edir: təmizləmə, əskik dəyərlərin həlli, normalizasiya/standartizasiya, etiketləmə. Data çevrilməsi (transformation) valyuta konversiyası (dollar → avro) və ya ölçü vahidi dəyişməsi (kq → funt) kimi əməliyyatları əhatə edə bilər.
+
+**Əlamət generasiyası** mövcud sütunlardan yeni data sütunları (əlamətlər) yaratmaqdır ki, datasetin modeli üçün informativliyi artsın. Məsələn, tarix sütunundan həftənin gününü və ya ayı çıxarmaq modelə zamanla bağlı qanunauyğunluqları tapmağa kömək edir.
+
+### ML iş prosesi (workflow)
+
+Data hazırlığı və model qurma sıx bağlıdır: data hazırlığı modelə təsir edir, model seçimi isə data hazırlığının növünə. Balans axtarışı çox iterativ prosesdir — sənət (və ya çoxsaylı sınaq-səhv) kimidir.
+
+İş prosesinin əsas mərhələləri:
+
+- **İlkin emal (preprocessing):** Data 3 dəstə bölünür — öyrədici (70%), validasiya (10%), test (20%). Model əvvəl öyrədici dəstdə öyrənir, sonra validasiya dəstində effektivliyi və ümumiləşdirmə (generalization) qabiliyyəti yoxlanır, ən sonda test dəstində sınanır. **Əlamətlər** datasetin nəticəyə təsir edə bilən müstəqil atributlarıdır, **etiket** isə hədəf nəticədir.
+- **Öyrətmə (training):** Konkret bizness-ssenari üçün uyğun alqoritm və data seçilir. Ən vacib mərhələdir. Dəqiqliyi artırmaq üçün müxtəlif **hiperparametrlərlə** eksperiment aparılır. Hiperparametrlər — öyrətmə prosesini idarə edən konfiqurasiya tənzimləmələridir.
+- **Qiymətləndirmə (evaluation):** Model öyrədildikdən sonra tanınan dataset üzərində dəqiqliyi (accuracy) yoxlanır. Validasiya dəstindən istifadə olunur.
+- **Proqnoz (prediction / inference):** Model praktikada tətbiq olunur və proqnoz verməyə başlayır. Real vaxtda və ya paket (batch) rejimində baş verə bilər.
+
+### Generativ AI dəyişikliyi
+
+Generativ AI ML sahəsində paradiqma dəyişikliyi yaratdı. Onun əsasında GPT-4 kimi **fundamental modellər (FM)** dayanır — internet miqyaslı nəhəng datasetlərdə öyrədilmişlər. Bu texnologiya təşkilatlara fundamental modelləri optimallaşdırmağa, əl ilə görülən işin və data hazırlığı vaxtının böyük hissəsini azaltmağa imkan verir.
+
+Amma generativ AI panasey deyil — bütün AI/ML problemlərini həll etmək üçün nəzərdə tutulmayıb. FM işləyib hazırlamaq böyük resurs tələb edir, ona görə çox şirkət hazır FM-ləri seçir: OpenAI, Google, Meta, Anthropic. Digər tərəfdən, ixtisaslaşmış model öyrətmək — xüsusi həllər lazım olan yerlərdə — hələ də cəlbedici variant olaraq qalır.
+
+---
+
+## Overfitting və underfitting — modelin iki dərdi
+
+Modeli qiymətləndirəndə iki əsas problem çıxır. Hər ikisi düzgün nəticə üçün nəzərə alınmalıdır.
+
+**Overfitting (həddindən artıq öyrənmə):** Model öyrədici datanı sanki əzbərləyir — səs-küyü də gizli qanunauyğunluqla birlikdə yadda saxlayır. Nəticədə öyrədici datada yüksək, amma yeni datada aşağı nəticə göstərir. Bu, **yüksək dispersiyaya (variance)** aparır: öyrədici datadakı kiçik dəyişiklik nəticələri kəskin dəyişir.
+
+**Underfitting (kifayət qədər öyrənməmə):** Model öyrədici dəstdəki əsas qanunauyğunluqları belə tuta bilmir. Adətən model həddindən artıq sadədir və ya kifayət qədər müstəqil dəyişən yoxdur. Bu, **yüksək sürüşməyə (bias)** aparır.
+
+> Yaxşı model bu ikisi arasında incə balansı tapır — nə əzbərləyir, nə də korlaşdıraraq sadələşdirir. Bunu bir sənət əsəri kimi düşün: dəqiq tənzimləmə (fine-tuning) ilə əldə olunur.
+
+Təsəvvür et: model müştərinin məhsul alıb-almayacağını dairələr və çarpazlarla təsnif edir. Overfitting olan model bütün "dairə" nöqtələrindən keçir, amma öyrədici dəstdən kənarda ümumiləşdirə bilmir. Underfitting olan model isə bir neçə nöqtəni buraxır. Yaxşı model (ortada) aydın proqnoz verir.
+
+---
+
+## Populyar ML alqoritmləri
+
+Alqoritmin populyarlığı tətbiq sahəsindən, effektivliyindən, başa düşülmə və miqyaslana bilmə qabiliyyətindən asılıdır. Ən çox işlənənləri gəzək — hər birinə gündəlik həyatdan analoji ilə.
+
+**Xətti reqressiya (linear regression):** Bir faktorun (X) digərini (Y) nə dərəcədə proqnozlaşdırdığını aşkarlayır. Bazarda balqabaq qiymətlərini düşün — balqabaq böyüdükcə qiyməti artır. Xətti reqressiya bütün nöqtələrə mümkün qədər yaxın keçən düz xətt çəkməyə çalışır. Daşınmaz əmlakda ev qiymətini (otaq sayı, yerləşmə, tikinti ilinə görə) proqnozlaşdırmaq üçün istifadə olunur.
+
+**Logistik reqressiya (logistic regression):** "Bəli/xeyr" səviyyəsində nəticə ehtimalını proqnozlaşdırır. Kitabın bestseller olub-olmayacağını (səhifə sayı, müəllif populyarlığı, janr → 0–1 ehtimalı) proqnozlaşdırmaq kimi. Səhiyyədə yaş, təzyiq, xolesterol əsasında ürək xəstəliyi ehtimalını hesablayır.
+
+**Qərar ağacları (decision trees):** Suallara cavab verərək qərar zənciri qurur. Geyim seçmək kimi: "Çöldə yağış var?" → bəli → yağmurluq; xeyr → "İsti?" → uyğun geyim. Müştərinin alış davranışını proqnozlaşdırmaq üçün: "Son ay nəsə alıb?" sualından başlayır.
+
+**Təsadüfi meşə (random forest):** Ad özü deyir — bir meşə, hər ağac isə qərar ağacıdır və nəticəyə "səs verir". Hər ağaca təsadüfi data alt-çoxluğu düşür, sonra hamı səs verir, çoxluğa görə qərar seçilir. Tək ağacdan daha dəqiq və stabildir. Maliyyədə kredit müraciətinin təsdiqi/rəddi üçün istifadə olunur.
+
+**K ən yaxın qonşu (k-NN):** Tanımadığın obyekti tanıdığın oxşar obyektlərlə müqayisə edib xüsusiyyətini müəyyən etmək. Yeni gördüyün meyvənin şirin/turş olduğunu oxşar meyvələrlə müqayisə edərək təxmin edirsən. Tövsiyə sistemlərində geniş işlənir: detektiv roman alan istifadəçiyə həmin kitabı alanların digər kitabları tövsiyə olunur.
+
+**Dəstək vektorları metodu (SVM):** Fərqli qrupları bir-birindən mümkün qədər geniş xətlə ayırır. Bir tərəfində alma, digərində banan olan masanı təsəvvür et — SVM ikisini ayıran ən geniş xətti tapır. Əlyazma rəqəm tanımada ("4"-ü "9"-dan ayırmaq) effektivdir.
+
+**Neyron şəbəkələri (neural networks):** Kompüter içində mini-beyin kimi işləyir, çoxlu nümunədən öyrənir. Velosiped sürməyi öyrənmək kimi — əvvəl yıxılırsan, sonra balansı tutursan, keçmiş səhvləri düzəldirsən. Sosial şəbəkələr foto­da insanları tanımaq üçün istifadə edir (burun forması, göz rəngi kimi əlamətlər).
+
+**K-means clustering:** Oxşar data nöqtələrini qruplaşdırır. Böyük ziyafətdə oxşar maraqlı dostları qruplara (kластерlərə) bölmək kimi. Marketinqdə müştəri seqmentasiyası üçün: bir kластерdə tez-tez az xərcləyənlər, digərində nadir amma böyük alış edənlər.
+
+**XGBoost:** Keçmiş səhvlərdən öyrənib hər qərarla ağıllaşır. Riyaziyyat məsələsində səhv edəndə səhvi yadda saxlayıb növbəti dəfə oxşarında ondan qaçmaq kimi. Kredit sənayesində qaytarılmama (default) riskini proqnozlaşdırmaq üçün geniş işlənir.
+
+Bəziləri (neyron şəbəkələri) böyük hesablama resursu tələb edir, digərləri (qərar ağacları, k-NN) kiçik datasetlə də işləyir. Seçim məsələdən və data növündən (mətn, qrafika, rəqəm) asılıdır.
+
+---
+
+## Alət və freymvorklar
+
+ML müxtəlif mərhələlər üçün müxtəlif alətlərlə həyata keçirilir. Onları funksiyaya görə qruplaşdıraq.
+
+**Data hazırlığı və analizi:**
+
+- **NumPy** — Python-da elmi hesablamalar üçün əsas kitabxana. Çoxölçülü массив obyektləri saxlayır. Массив — yaddaşın bitişik sahələrində saxlanan eyni tipli data elementlərinin kolleksiyasıdır.
+- **Pandas** — sadə, yüksək performanslı data strukturları verir: `Series` (bir sütun) və `DataFrame` (sütunlardan ibarət çoxölçülü cədvəl). NumPy əsasında qurulub. Data təmizləmə, analiz və vizuallaşdırmanı asanlaşdırır.
+- **Scikit-learn** — Pandas və NumPy ilə işləyən proqnoz analiz aləti. Öyrədicili və öyrədicisiz öyrənmə metodlarını dəstəkləyir, model seçimi/qiymətləndirməsi üçün çoxlu hazır alət var.
+
+**Vizuallaşdırma:**
+
+- **Matplotlib** — statik, interaktiv və animasiyalı vizuallaşdırmalar. Xətti qrafik, səpələnmə (scatter), histoqram, dairəvi, 3D diaqram.
+- **Seaborn** — Matplotlib əsasında statistik vizuallaşdırma. Hazır temalar və rəng palitraları ilə peşəkar qrafiklər. Çox dəyişənli mürəkkəb dataset (məsələn heatmap) üçün əla.
+- **BI alətləri** — Tableau, Microsoft Power BI, Amazon QuickSight, MicroStrategy. Qrafik interfeys ilə drag-and-drop analiz; proqramlaşdırma bilməyənlər üçün ideal. Real vaxtda dashboard-lar qurur.
+
+**Model işləmə və öyrətmə:**
+
+- **TensorFlow** — açıq mənbəli tam funksiyalı ML platforması. Əsas xüsusiyyəti — data axını qrafları qurmaq. Qrafda hər düyün (node) riyazi əməliyyatdır, düyünlər arası əlaqələr (kənarlar) tenzorları — çoxölçülü data массivlərini təmsil edir.
+- **PyTorch** — çevikliyi, sadəliyi və **dinamik hesablama qrafı** ilə populyar (dərin öyrənmə üçün xüsusilə faydalı). Dinamik qraf şəbəkənin davranışını iş vaxtı dəyişməyə imkan verir. Həm tədqiqatda, həm production-da işlənir.
+- **Keras** — dərin öyrənmə modelləri qurmaq üçün rahat API. TensorFlow kimi kitabxanaların üstündə işləyə bilir. Sadəliyi və eksperiment rahatlığı ilə məşhurdur.
+- **MLlib (Apache Spark)** — Big Data üçün miqyaslanan ML kitabxanası. Paylanmış hesablama sayəsində nəhəng data həcmini sürətlə emal edir. Real vaxtda kredit kartı fırıldaqçılığının aşkarlanması üçün ideal.
+
+**Model deployment (yerləşdirmə):**
+
+- **Docker** — konteynerlərdən istifadə edən tətbiqlərin qurulması/işə salınmasını asanlaşdırır. ML aləti deyil, amma modeli bütün asılılıqları (kitabxana, alət, skript) ilə birlikdə bir konteynerə qablaşdırıb hər mühitdə eyni işlətməyə imkan verir.
+- **Flask** — Python-da micro-freymvork. Sadə, öyrənməsi asan; yüngül vebtətbiq və API deployment üçün populyar. Məsələn: mesajın spam olub-olmadığını təyin edən modeli veb-server kimi yerləşdirmək.
+
+**IDE-lər:**
+
+- **Jupyter Notebook** — açıq mənbəli veb-tətbiq. Canlı kod, düstur, vizuallaşdırma və izahlı mətn saxlayan interaktiv sənədlər yaradır. Python, R, Julia dəstəkləyir. Data science-in özəyidir.
+- **RStudio** — R dili üçün açıq mənbəli IDE. Statistik hesablama, vizuallaşdırma və skript işləmə üçün güclü.
+- **Apache Zeppelin** — Jupyter-ə oxşar notebook mühiti. Apache Spark, Python, JDBC kimi müxtəlif backend-ləri dəstəkləyir. Daxili vizuallaşdırma güclü tərəfidir.
+
+---
+
+## ML buludda
+
+ML modellərini işləmək mürəkkəb və bahalıdır. İş prosesinin hər addımında maneə var — darıxdırıcı data toplama/hazırlıqdan tutmuş düzgün alqoritm seçiminə (çox vaxt sınaq-səhv ilə), uzun və bahalı öyrətməyə qədər. Sonra modeli tənzimləmək lazımdır — tənzimləmə dövrü minlərlə kombinasiya tələb edə bilər.
+
+Bu problemləri həll etmək üçün bütün əsas bulud provayderləri **idarə olunan ML platforması** təklif edir.
+
+**Amazon SageMaker** — ən populyar uçdan-uca ML platformalarından biridir. SageMaker Studio bir mühitdə inteqrasiya olunmuş alət dəsti verir. Jupyter Notebook və JupyterLab mühitlərini ani işə salır, eksperiment idarəçiliyi, data hazırlığı, pipeline avtomatlaşdırması təklif edir. Miqyaslama, yamaq (patching), yüksək əlçatanlıq kimi bütün infrastruktur problemlərini üzərinə götürür.
+
+Oxşar platformalar: GCP-dən **Google Cloud AI**, Microsoft Azure-dən **Azure ML Studio**.
+
+İdarə olunan platformalardan başqa, bulud hazır **AI xidmətləri** də verir. Bunlar modeli proqramlaşdırma bacarığı olmadan istənilən tətbiqə intellekt əlavə etməyə imkan verir. Məsələn AWS-in **Amazon Comprehend** xidməti müxtəlif dillərdə açar ifadə aşkarlanması və tonallıq analizi üçün əvvəlcədən öyrədilmiş modellər verir.
+
+Bulud həm də generativ AI-ın fundamental modelləri üçün əsas platformaya çevrilir. **Amazon Bedrock** API ilə stability.ai, Meta, Mistral, Anthropic, Amazon, AI21 kimi şirkətlərin FM-lərinə çıxış verir. Azure OpenAI GPT-4-ə, GCP isə öz Gemini modelinə API çıxışı verir.
+
+---
+
+## ML arxitekturasının qurulması
+
+Dağınıq kod parçalarından etibarlı və miqyaslanan iş prosesi qurmaq mürəkkəb işdir, çox data science mütəxəssisinin bu təcrübəsi olmur. ML iş prosesi bir neçə mərhələnin koordinasiya olunmuş ardıcıllığıdır. Mütəxəssislər əvvəl kod fraqmentlərini qablaşdırmalı, sonra icra ardıcıllığını göstərməli, həm də kod, data və parametr asılılıqlarını izləməlidir.
+
+ML arxitekturası model artefaktlarını qorumalı, işləmə/öyrətmə üçün self-service funksionallıq verməli, bütün həyat dövrünü avtomatik sənədləşdirməlidir. Həmçinin **CI/CD pipeline** (davamlı inteqrasiya/davamlı yerləşdirmə) tətbiq etməlidir.
+
+Aşağıda AWS platformasında ML arxitekturasının komponentlərini gəzək.
+
+### Hazırlıq və etiketləmə
+
+Data-nı ML üçün hazırlamaq — əlamət generasiyası, data yoxlaması, model qiymətləndirmə və interpretasiya deməkdir. Əlamət generasiyası zamanı dataset alqoritmin gözlədiyi formata çevrilir.
+
+- **SageMaker Data Wrangler** — data hazırlığını sadələşdirir: yükləmə, birləşdirmə, təmizləmə, çevirmə üçün vizual interfeys. Ümumi əməliyyatları kod yazmadan yerinə yetirir.
+- **SageMaker Feature Store** — ML modelləri üçün əlamətləri saxlayan mərkəzi repozitoriya. Öyrətmə və inference üçün ardıcıl əlamət dəstini saxlayır.
+- **Data etiketləmə** — üçüncü tərəf xidmətlərlə (Labelbox, CrowdAI, Docugami, Scale) və ya **SageMaker Ground Truth** ilə (şəkil etiketlənməsini avtomatlaşdırır) həyata keçirilir.
+
+### Model seçimi və qurulması
+
+Model qurmadan əvvəl bizness-məsələni aydın başa düşmək lazımdır — bu, alqoritm seçiminə kömək edir. Data science mütəxəssisləri əsasən Jupyter Notebook və RStudio-nu model qurma platforması kimi seçir. Bulud üçün SageMaker Studio və RStudio hazır vizual interfeys verir.
+
+### Model öyrətmə və tənzimləmə
+
+Öyrətməni sürətləndirmək üçün **paylanmış hesablama klasteri** məsləhətdir — iş yükünü bir neçə resursa bölür, paralel hesablama aparır. Nəticədə öyrətmə tez bitir, daha böyük dataset emal olunur.
+
+**Hiperparametr tənzimləməsi** dəqiq nəticə üçün son dərəcə vacibdir. Ən effektiv model versiyasını tapmaq üçün müxtəlif hiperparametr diapazonları ilə öyrətmə tapşırıqları işə salınır. Debug alətləri real vaxt metrikləri (öyrətmə/validasiya dəqiqliyi, səhv matrisləri, qradiyentlər) müəyyən etməyə kömək edir. Bütün eksperimentlər — giriş parametrləri, konfiqurasiyalar, nəticələr — sənədləşdirilməlidir.
+
+**SageMaker Autopilot** model işləmənin bəzi sahələrini avtomatlaşdırır: xam datanı analiz edir, əlamət emalı tətbiq edir, ən uyğun alqoritmləri seçir, öyrədir, tənzimləyir və performans metriklərinə görə sıralayır.
+
+### Model deployment və idarəetmə
+
+Real vaxt və ya paket proqnozu üçün öyrədilmiş model production mühitinə yerləşdirilir. Yüksək artıqlıq üçün müxtəlif yerlərdə avtomiqyaslama, tətbiq üçün **RESTful HTTPS endpoint**-lər qurulur. Belə yanaşma yeni modelin tez inteqrasiyasını asanlaşdırır — modeldəki dəyişiklik mütləq tətbiq kodunun dəyişməsini tələb etmir.
+
+Data mövsümilik və ya gözlənilməz hadisələr səbəbindən tez dəyişir. Ona görə model həm dəqiqlik, həm bizness aktuallığı baxımından davamlı izlənməlidir. Kritik bir amil var:
+
+> **Concept drift (konsepsiya sürüşməsi):** Proqnoz verilən data öyrətmə datasından fərqlənəndə. Modelin öyrəndiyi qanunauyğunluqlar cari data mühitində artıq doğru olmur.
+
+Məsələn, iqtisadi şəraitin dəyişməsi faiz dərəcələrini dəyişir, bu da ev təsərrüfatları üçün alış proqnozlarına təsir edir. Həlli: yerləşdirilmiş modellərdə avtomatik concept drift aşkarlanması və detallı xəbərdarlıqlar qurmaq.
+
+Bir də **model uyğunluğu (compatibility)** var. Model qurulub öyrədildikdən sonra hədəf aparat platforması (Intel, NVIDIA, ARM) seçilir. Model periferik (edge) qurğularda optimal işləməsi üçün kompilyasiya olunmalıdır.
+
+### Referens arxitektura (AWS-də kredit təsdiqi)
+
+Bir bank kredit müraciəti iş prosesini AWS-də təsəvvür edək. Müştəri datası buluda daxil olur, ML freymvorku müraciət barədə qərar verir. Əsas prinsiplər:
+
+**Öyrətmə iş prosesi:**
+
+1. Datasetlər **S3** ilə prosesə daxil olur (xam və ya ilkin emaldan keçmiş).
+2. **Ground Truth** yüksək keyfiyyətli öyrədici dataset yaradır (lazım olsa etiketləyir).
+3. **AWS Lambda** datanı SageMaker-ə ötürməzdən əvvəl inteqrasiya, hazırlıq, təmizləmə üçün istifadə olunur.
+4. Data science mütəxəssisləri **SageMaker** ilə model öyrədir/test edir. Docker образları **ECR**-də saxlanır.
+5. Model artefaktları **S3**-ə çıxarılır.
+6. Yeni artefakt S3 bucket-inə düşəndə **AWS Lambda** təsdiq prosesini işə sala bilər.
+7. **Amazon SNS** avtomatik və ya insan iştiraklı təsdiq prosesi verir.
+8. **DynamoDB** bütün metadata, hərəkət və audit datasını saxlayır.
+9. Yekun modeli yerləşdirmək üçün uyğun konfiqurasiya ilə **endpoint** qurulur.
+
+**Build iş prosesi:**
+
+10. **SageMaker Notebook** nümunələri data hazırlığı, öyrətmə və yerləşdirmə üçün istifadə olunur (VPC endpoint vasitəsilə).
+11. **CodeCommit** mənbə kodu repozitoriyasıdır, build tapşırıqlarını işə salır.
+12. **CodePipeline** qeyri-standart Docker образları üçün uçdan-uca build pipeline-ını idarə edir, **CodeBuild** ilə build/test aparır.
+13. **CodeBuild** образı qurur, unit-test edir və **ECR**-ə yerləşdirir.
+
+**Deployment iş prosesi:**
+
+14. SageMaker endpoint-ləri privat olduğundan, **Amazon API Gateway** istifadəçilərə inference üçün model endpoint-i verir.
+
+Paket çevirmə (batch transform) tapşırıqları bütün dataset üzərində inference almaq üçün lazımdır, nəticə S3-də saxlanır. **SageMaker Model Monitor** işləyən modelləri izləyib keyfiyyət problemlərində bildiriş göndərir.
+
+---
+
+## ML arxitekturasının dizayn prinsipləri
+
+Effektiv arxitektura strateji yanaşma tələb edir. Peşəkarların rəhbər tutduğu əsas prinsiplər:
+
+- **Modulluq (modularity):** Sistem ayrı, dəyişdirilə bilən modullara bölünür — biri data toplama, biri ilkin emal, biri öyrətmə, biri proqnoz. Daha yaxşı alqoritm çıxanda öyrətmə modulunu digərlərini pozmadan dəyişmək olar.
+- **Miqyaslana bilmə (scalability):** İş yükü və ya istifadəçi tələbi artdıqda stabil performansı saxlamaq. Netflix-in tövsiyə sistemi artan istifadəçi sayına dəqiqlik itirmədən uyğunlaşmalıdır. Və ya "Qara cümə" endirimlərində eksponensial artan əməliyyat.
+- **Təkrar istehsal oluna bilmə (reproducibility):** Eyni data, kod və parametrlərlə təkrar öyrətmə eyni nəticəni verməlidir. Tibbi diaqnostikada diaqnozların modelin fərqli nüsxələri arasında ardıcıl qalması vacibdir.
+- **Data keyfiyyət nəzarəti:** Modelə ötürülən datanın dəqiqliyini (accuracy), tamlığını (completeness) və etibarlılığını (reliability) yoxlamaq mexanizmləri. Sürücüsüz avtomobildə data keyfiyyəti birbaşa təhlükəsizliyə təsir edir.
+- **Çeviklik (flexibility):** Yeni data mənbələrini, data növlərini və alqoritmləri əsaslı yenidənişləmə olmadan inteqrasiya etmək. Kontent aqreqatoru yeni xəbər saytlarını və ya video/podkast tiplərini asan əlavə edə bilməlidir.
+- **Robastlıq və etibarlılıq:** Giriş datasındakı dəyişikliyə davamlı, ardıcıl nəticə. Spam filtri spamerlərin dil və terminologiyanı dəyişməsinə baxmayaraq işləməlidir. Avtomatik birja ticarətində bazar səs-küyünü ayırd etmək həyati vacibdir.
+- **Məxfilik və təhlükəsizlik (privacy & security):** Data və modelin icazəsiz çıxışdan qorunması, şəxsi datanın etika və uyğunluğa (compliance) əsasən emalı. Personalizasiya olunmuş marketinqdə istifadəçi datası ən yüksək təhlükəsizliklə emal olunmalıdır.
+- **Effektivlik (efficiency):** Maksimum performans, minimum resurs. Mobil tətbiqdə ML funksiyası batareyanı həddindən artıq yormamalıdır. Real vaxt fırıldaqçılıq aşkarlanmasında sürət və resurs balansı əsasdır.
+- **İnterpretasiya oluna bilmə (interpretability):** Modelin nəticələri insan üçün anlaşıqlı və izahlı olmalıdır. Tibbi platforma diaqnoz əsaslandırmasını verməlidir. Kredit skorinqində istifadəçi və tənzimləyici hansı amillərin bala təsir etdiyini bilməlidir.
+- **Real vaxt qabiliyyəti:** Datanı real və ya real vaxta yaxın emal etmək. Sürücüsüz nəqliyyat sensor datası əsasında ani qərar verir (maneə tanımaq, optimal yol seçmək).
+- **Nasazlığa dözümlülük (fault tolerance):** Bəzi komponentlər sıradan çıxsa belə funksionallığı saxlamaq. Pərakəndə tövsiyə sistemi bəzi data mənbələri müvəqqəti əlçatmaz olsa da məhsul tövsiyə etməlidir.
+
+---
+
+## MLOps
+
+ML iş prosesi real bir məsələni həll edən riyazi model formalaşdırmaq üçün əməliyyatlar kompleksidir. Amma bu modellər production-a yerləşdirilməyincə heç bir dəyəri yoxdur — konsepsiya sübutu (proof of concept) olaraq qalır.
+
+**MLOps** eksperimental ML modelini tam funksional işlək sistemə çevirməyə yönəlib. Ənənəvi DevOps-dan fərqlənir, çünki ML həyat dövrü unikaldır və spesifik ML artefaktları istehsal edir. ML-də mərkəzi yer öyrədici datadakı qanunauyğunluqları aşkarlamaqdır — ona görə MLOps data dəyişikliklərinə, həcm və keyfiyyət dalğalanmalarına xüsusilə həssasdır.
+
+### MLOps prinsipləri
+
+Kod, öyrədici data və ya modeldə hər dəyişiklik build prosesini işə salmalıdır. Pipeline bu prinsiplərə uyğun olmalıdır:
+
+- **Avtomatlaşdırma:** Production-a deployment avtomatik olmalıdır — data mühəndisliyindən model inference-ə qədər əl müdaxiləsiz. Pipeline öyrətmə/deployment-i cədvəl, mesaj, monitorinq, data dəyişikliyi kimi hadisələrlə işə sala bilər.
+- **Versiya nəzarəti:** Hər model və əlaqəli skript versiya nəzarət sistemində (GitHub) saxlanmalıdır — təkrar istehsal və audit üçün.
+- **Test:** Ən azı 3 sahə: (1) əlamət və data testləri (keyfiyyət yoxlaması, düzgün əlamət seçimi); (2) model işləmə testləri (bizness-metrik, aktuallıq, effektivlik); (3) infrastruktur testləri (ML API, bütün pipeline inteqrasiyası, server əlçatanlığı).
+- **Təkrar istehsal:** Hər mərhələ təkrar istehsal oluna bilməlidir — oxşar girişdə oxşar nəticə.
+- **Deployment:** MLOps DevOps mədəniyyəti ilə birləşir, CI/CD və **CT/CM** (davamlı öyrətmə / davamlı monitorinq) üzərində fokuslanır.
+- **Monitorinq:** Zamanla model performansı data drift səbəbindən azala bilər. Yerləşdirmədən sonra monitorinq sistemi qurulmalıdır ki, model gözləntilər çərçivəsində işləsin.
+
+### MLOps ən yaxşı praktikaları
+
+"Hərəkət edən hissələr" (data, model, kod) çox olduğundan MLOps-u tətbiq etmək çətin ola bilər. Praktikalar:
+
+- **Dizayn faktorları:** Arxitektura modul və mümkün qədər **zəif əlaqəli (loosely coupled)** olmalıdır. Zəif əlaqə komandaların müstəqil işləməsinə imkan verir.
+- **Data yoxlaması:** Production data-nın statistik xüsusiyyətləri öyrədici datadan fərqlənə bilər. Data drift zamanla növbəti paketlərin statistik xüsusiyyətlərini dəyişir və model performansına təsir edir.
+- **Model yoxlaması:** Model təkrar istifadəsi kod təkrar istifadəsindən fərqlidir — modeli hər yeni ssenari üçün tənzimləmək məsləhətdir. Production-a çıxmazdan əvvəl həm online, həm offline yoxlama.
+- **Eksperiment izləmə:** Bütün eksperimentlər (kod, dataset, hiperparametr kombinasiyaları) sənədləşdirilməlidir. Hər unikal kombinasiya müqayisə olunası metriklər verir.
+- **Kod keyfiyyət yoxlaması:** Hər ML spesifikasiyası (öyrətmə kodu) **code review**-dən keçməlidir — pull request ilə işə düşən pipeline yaxşı praktikadır.
+- **Adlandırma konvensiyaları:** Python-da PEP8 kimi standartlara riayət **CACE** prinsipinin (Changing Anything Changes Everything — "hər şeyin dəyişməsi hər şeyi dəyişir") yaratdığı problemləri həll edir.
+- **Model performans monitorinqi:** Proyekt metrikləri (məsələn RMSE) ilə yanaşı əməliyyat metriklərini (gecikmə, miqyaslanma) izləmək.
+- **CT/CM prosesi:** CT (continuous training) modellərin ən yeni data ilə müntəzəm öyrədilməsini, CM (continuous monitoring) real vaxt performans izləməsini təmin edir. Birlikdə etibarlı freymvork yaradır.
+- **Resurs istehlakı:** Öyrətmə və deployment mərhələlərində sistem tələblərini başa düşmək resurs optimallaşdırması və xərc qənaəti üçün vacibdir.
+
+---
+
+## Dərin öyrənmə (deep learning)
+
+ML-in əsas məqsədi proqnoz və mürəkkəb məsələləri (NLP daxil) həll etməkdir. Öyrədicili öyrənmə əvvəlcədən etiketlənmiş data tələb edir, amma **dərin öyrənmə** etiketsiz öyrənmə üçün neyron şəbəkəsindən istifadə edir — insan beyninin davranışını böyük data həcmində modelləşdirir.
+
+Dərin öyrənmə çoxlaylı neyron şəbəkəsi istifadə edir. Model bir-biri ilə əlaqəli düyünlərdən ibarətdir: **giriş qatı (input layer)** datanı müxtəlif düyünlərdən verir, data bir neçə **gizli qatdan (hidden layers)** keçir, **çıxış qatı (output layer)** yekun nəticəni (inference) verir. Giriş və çıxış qatları görünəndir, öyrənmə isə aralıq qatlarda çəki (weight) və sürüşmə (bias) ilə baş verir.
+
+### Çəkilər necə işləyir
+
+**Çəki (weight)** neyron şəbəkəsinin parametridir — girişin gizli qatlardan keçərkən necə çevrildiyinə təsir edir. Yəni verilmiş girişin çıxışa nə dərəcədə təsir edəcəyini müəyyən edir. Düyünlər arası əlaqənin gücü kimi düşün.
+
+- A → B kənarının çəkisi yüksəkdirsə, A neyronu B-yə daha güclü təsir edir.
+- Sıfıra yaxın çəki: bu girişin dəyişməsi çıxışa demək olar təsir etmir.
+- Mənfi çəki: əks əlaqə — giriş artdıqca çıxış azalır.
+
+### İki öyrənmə metodu
+
+**İrəli yayılma (forward propagation):** Data giriş qatından çıxış qatına doğru hərəkət edir. Bir qatın çıxışı növbəti qatın girişinə ötürülür, yekun nəticəyə qədər.
+
+**Geri yayılma (backpropagation):** Şəbəkənin proqnozundakı səhv (proqnoz ilə faktiki nəticə arasındakı fərq) hesablanır. Sonra şəbəkə daxili parametrlərini — çəki və sürüşmələri — bu səhvə əsasən korrektə edir. Korrektə çıxış qatından geriyə doğru gedir, ona görə "geri" adlanır.
+
+> İrəli + geri yayılmanın kombinasiyası ilə şəbəkə öyrənir: datanı emal edir (irəli), qeyri-dəqiqlikləri aşkarlayır (geri), parametrləri dəyişir. Bu dövr neyron şəbəkəsinin öyrənməsinin əsasıdır.
+
+### İki populyar tip
+
+- **Konvolyusiya neyron şəbəkələri (CNN):** Şəbəkə topologiyasında data (məsələn şəkillər) emalında əladır. Kompüter görməsi (computer vision) və şəkil təsnifatı üçün yüksək effektivdir.
+- **Rekurrent neyron şəbəkələri (RNN):** Ardıcıl (sequential) data emalında güclüdür. Dil və nitq başa düşməsi (NLP, nitq tanıma) üçün ideal.
+
+Freymvorklar: TensorFlow, MXNet (effektivlik və miqyaslanma ilə tanınır), həmçinin PyTorch, Chainer, Caffe2, ONNX, Keras, Gluon.
+
+### Dərin öyrənmə real həyatda
+
+- **Səhiyyə:** Modellər tibbi şəkillərdə xəstəlik əlamətlərini tanıyır, ikinci rəy verir. Google DeepMind göz xəstəliklərini 3D skanlarda aşkar edən model işləyib.
+- **Sürücüsüz nəqliyyat:** Tesla, Waymo çoxlu sensor datası ilə obyekt tanıma, yol nişanları anlama, təhlükəsiz sürmə qərarları verir.
+- **İstehsalat:** General Electric avadanlıq datasını analiz edib nasazlıqları qabaqcadan görür, dayanma vaxtını azaldır.
+
+---
+
+## NLP (Təbii dilin emalı)
+
+NLP təbii dilləri başa düşmək və oxumaq üçündür. AI-ı hesablama dilçiliyi ilə birləşdirir ki, kompüter nitq və ya mətn şəklində təbii dili emal edə bilsin. Praktik ssenariləri gəzək.
+
+**Çat-botlar və virtual köməkçilər:** NLP-nin ən geniş tətbiqi. Siri, Alexa və saytlardakı dəstək botları. İstifadəçi girişini (sual/əmr) başa düşür, mənalı cavab generasiya edir.
+
+**Tonallıq analizi (sentiment analysis):** Şirkətlər brend, məhsul və ya xidmətə münasibəti qiymətləndirmək üçün müştəri rəylərini analiz edir. Emosiyaları müsbət, neytral, mənfi olaraq təsnif edir. Amazon Connect kimi müasir kontakt-mərkəz həlləri real vaxtda səsli ünsiyyəti analiz edib müştəri emosiyalarını təyin edir.
+
+**Mətn referatlaşdırması (text summarization):** Uzun sənəd və məqalələrin kompakt xülasəsini generasiya edir. Kritik informasiyanı itirmədən həcmi azaldır. Hüquq və elmi tədqiqatda — böyük sənəd həcmindən vacib informasiyanı tez çıxarmaq üçün faydalıdır.
+
+**Maşın tərcüməsi:** Google Translate NLP ilə mətnin orijinal dildəki məzmununu qavrayır və tərcümə dilində ekvivalent mətn generasiya edir. Qrammatik/sintaktik qaydalara riayət edir, məna və kontekstı saxlayır.
+
+**Böyük dil modelləri (LLM):** GPT (Generative Pretrained Transformer) kimi modellər transformer arxitekturası kimi formalaşıb. Mətni başa düşmək və insanabənzər mətn generasiya etmək üçün işlənib — avtotamamlama, referatlaşdırma, tərcümə kimi tapşırıqlarla məşğul olur.
+
+---
+
+## Sona qədər: modeldən dəyərə
+
+Uzun bir yol gəzdik. Gəlin əsas ideyanı bir daha yığcam saxlayaq.
+
+**Əvvəl** ML sadəcə bir riyazi model idi — dağınıq kod, notebook-da eksperiment, "işləyir amma laboratoriyada qalır". **Sonra** — düzgün arxitektura ilə — o, production-da işləyən, avtomatik yenilənən, dreyfi izlənən, təhlükəsiz və miqyaslanan bir sistemə çevrilir.
+
+Fərqi yaradan bir neçə şeydir:
+
+- **Data hər şeydir** — vaxtın 80%-i orada gedir, keyfiyyət modelin taleyini həll edir.
+- **Balans sənətdir** — overfitting və underfitting arasında düzgün nöqtəni tapmaq.
+- **MLOps körpüdür** — eksperimenti işlək məhsula çevirən, CI/CD və CT/CM ilə onu canlı saxlayan disiplin.
+- **Prinsiplər kompas** — modulluq, miqyaslanma, robastlıq, interpretasiya olunma... bunlar olmasa sistem real dünyada dağılır.
+
+ML və AI nəhəng mövzulardır — hər birinə ayrıca kitab lazımdır. Bu yazı yalnız əsas modellərin, tiplərin və iş proseslərinin xəritəsidir. Növbəti addım isə generativ AI-dır — fundamental modellər və mövcud həllər.
+
+Bəs sən öz proyektində ilk hansı prinsipdən başlayardın — dataya, yoxsa arxitekturaya?
+
