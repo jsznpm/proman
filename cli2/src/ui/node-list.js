@@ -4,7 +4,7 @@ import Spinner from "ink-spinner";
 import { html } from "./html.js";
 import { Frame } from "./frame.js";
 import { useAsync } from "./use-data.js";
-import { listMarkdown, lastCommitDate } from "../github.js";
+import { listContents, lastCommitDate } from "../github.js";
 import { mapLimit, fmtDate } from "../util.js";
 import { COLORS } from "./theme.js";
 
@@ -12,30 +12,29 @@ const PAGE_SIZE = 10;
 const CONCURRENCY = 5;
 
 /**
- * Paginated multi-select over a folder's .md files. Page + cursor-within-page
- * model so each page can be re-sorted by commit date (newest first), matching
- * the original CLI. Commit dates are fetched lazily, per visible page.
+ * Paginated browser over a directory's mixed contents (subfolders + .md
+ * files), reused at any nesting depth by passing a different `path`.
+ * Dirs sort before files (per listContents); within a page, only the file
+ * rows are re-sorted by commit date (newest first) once fetched — dirs keep
+ * their fetched order and never carry a date/checkbox.
  *
- * Keys: ↑/↓ move · n/p page · Space toggle · Enter preview · o open in
- * browser · b/Esc back.
+ * Keys: ↑/↓ move · n/p page · Space select (files only) · Enter preview file
+ * / descend into dir · o open in browser (files only) · b/Esc back.
  */
-export function FileList({ ctx, folder, status, onPreview, onOpen, onBack }) {
-  const { loading, data: files, error } = useAsync(
-    () => listMarkdown(folder.name, ctx),
-    [folder.name]
-  );
+export function NodeList({ ctx, path, title, status, onDescend, onPreview, onOpen, onBack }) {
+  const { loading, data: entries, error } = useAsync(() => listContents(path, ctx), [path]);
   const [page, setPage] = useState(0);
   const [cursor, setCursor] = useState(0);
   const [selected, setSelected] = useState(() => new Set());
   const [dates, setDates] = useState(() => new Map());
 
-  const totalPages = files ? Math.max(1, Math.ceil(files.length / PAGE_SIZE)) : 1;
-  const pageItems = files ? files.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE) : [];
+  const totalPages = entries ? Math.max(1, Math.ceil(entries.length / PAGE_SIZE)) : 1;
+  const pageItems = entries ? entries.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE) : [];
 
-  // Fetch commit dates for the current page only.
+  // Fetch commit dates for file rows on the current page only.
   useEffect(() => {
-    if (!files) return;
-    const missing = pageItems.filter((f) => !dates.has(f.path));
+    if (!entries) return;
+    const missing = pageItems.filter((e) => e.type === "file" && !dates.has(e.path));
     if (!missing.length) return;
     let alive = true;
     mapLimit(missing, CONCURRENCY, (f) => lastCommitDate(f.path, ctx)).then((ds) => {
@@ -50,16 +49,18 @@ export function FileList({ ctx, folder, status, onPreview, onOpen, onBack }) {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [files, page]);
+  }, [entries, page]);
 
-  const sorted = [...pageItems].sort(
+  const dirs = pageItems.filter((e) => e.type === "dir");
+  const files = [...pageItems.filter((e) => e.type === "file")].sort(
     (a, b) => (dates.get(b.path) ?? 0) - (dates.get(a.path) ?? 0)
   );
+  const sorted = [...dirs, ...files];
   const highlighted = sorted[Math.min(cursor, sorted.length - 1)];
 
   useInput((input, key) => {
     if (loading) return;
-    if (error || !files || !files.length) {
+    if (error || !entries || !entries.length) {
       if (input === "b" || key.escape) onBack();
       return;
     }
@@ -87,7 +88,7 @@ export function FileList({ ctx, folder, status, onPreview, onOpen, onBack }) {
         setCursor(0);
       }
     } else if (input === " ") {
-      if (highlighted) {
+      if (highlighted && highlighted.type === "file") {
         setSelected((prev) => {
           const s = new Set(prev);
           if (s.has(highlighted.path)) s.delete(highlighted.path);
@@ -96,11 +97,12 @@ export function FileList({ ctx, folder, status, onPreview, onOpen, onBack }) {
         });
       }
     } else if (key.return) {
-      if (highlighted) onPreview(highlighted);
+      if (highlighted && highlighted.type === "dir") onDescend(highlighted);
+      else if (highlighted) onPreview(highlighted);
     } else if (input === "o") {
       const picks = selected.size
         ? files.filter((f) => selected.has(f.path))
-        : highlighted
+        : highlighted && highlighted.type === "file"
         ? [highlighted]
         : [];
       if (picks.length) onOpen(picks);
@@ -110,27 +112,35 @@ export function FileList({ ctx, folder, status, onPreview, onOpen, onBack }) {
   });
 
   if (loading)
-    return html`<${Frame} title=${folder.name}><${Text}><${Spinner} type="dots" /> Loading files…<//><//>`;
+    return html`<${Frame} title=${title}><${Text}><${Spinner} type="dots" /> Loading…<//><//>`;
   if (error)
-    return html`<${Frame} title=${folder.name} hint="b/Esc back"><${Text} color=${COLORS.error}>${error.message}<//><//>`;
-  if (!files.length)
-    return html`<${Frame} title=${folder.name} hint="b/Esc back"><${Text}>No .md files in "${folder.name}".<//><//>`;
+    return html`<${Frame} title=${title} hint="b/Esc back"><${Text} color=${COLORS.error}>${error.message}<//><//>`;
+  if (!entries.length)
+    return html`<${Frame} title=${title} hint="b/Esc back"><${Text}>Nothing in "${title}".<//><//>`;
 
   return html`
     <${Frame}
-      title=${`${folder.name} — page ${page + 1}/${totalPages} · ${selected.size} selected`}
+      title=${`${title} — page ${page + 1}/${totalPages} · ${selected.size} selected`}
       status=${status}
-      hint="↑/↓ move · Space select · Enter preview · o browser · n/p page · b back"
+      hint="↑/↓ move · Space select · Enter preview/descend · o browser · n/p page · b back"
     >
-      ${sorted.map((f, i) => {
+      ${sorted.map((e, i) => {
         const active = i === Math.min(cursor, sorted.length - 1);
-        const checked = selected.has(f.path);
+        if (e.type === "dir") {
+          return html`
+            <${Box} key=${e.path}>
+              <${Text} color=${active ? COLORS.marker : COLORS.dim}>${active ? "› " : "  "}<//>
+              <${Text} color=${active ? COLORS.selected : undefined} bold=${active}>${e.name + "/"}<//>
+            <//>
+          `;
+        }
+        const checked = selected.has(e.path);
         return html`
-          <${Box} key=${f.path}>
+          <${Box} key=${e.path}>
             <${Text} color=${active ? COLORS.marker : COLORS.dim}>${active ? "› " : "  "}<//>
             <${Text} color=${checked ? COLORS.selected : COLORS.dim}>${checked ? "[x] " : "[ ] "}<//>
-            <${Text} color=${active ? COLORS.selected : undefined} bold=${active}>${f.name}<//>
-            <${Text} color=${COLORS.dim}>${"  (" + fmtDate(dates.get(f.path)) + ")"}<//>
+            <${Text} color=${active ? COLORS.selected : undefined} bold=${active}>${e.name}<//>
+            <${Text} color=${COLORS.dim}>${"  (" + fmtDate(dates.get(e.path)) + ")"}<//>
           <//>
         `;
       })}

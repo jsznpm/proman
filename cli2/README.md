@@ -80,8 +80,34 @@ Or set it per-project in `package.json`:
 | Screen   | Keys |
 |----------|------|
 | Folders  | `↑`/`↓` move · `n`/`p` page · `Enter` open · `q` quit |
-| Files    | `↑`/`↓` move · `Space` select · `Enter` preview · `o` open in browser · `n`/`p` page · `b`/`Esc` back |
+| Password | type to enter · `Enter` unlock · `Esc` cancel (shown only for the password-gated `locked` folder) |
+| Browse   | `↑`/`↓` move · `Space` select (files) · `Enter` preview file / descend into folder · `o` open in browser · `n`/`p` page · `b`/`Esc` back |
 | Preview  | `↑`/`↓` scroll · `Space` page down · `g`/`G` top/bottom · `o` open in browser · `b`/`Esc` back |
+
+## Locked folder password
+
+The `locked` content folder is gated in the TUI by a password prompt. This is
+a **UX gate only** — the files still live in the public repo and are
+readable directly via the GitHub API/website. The password's SHA-256 hex
+digest is embedded in `src/config.js` as `LOCKED_PASSWORD_HASH`; the
+plaintext password itself is never written to disk or committed anywhere.
+
+To set or rotate the password:
+
+1. Pick a passphrase.
+2. Compute its SHA-256 hex digest (nothing is written to disk):
+
+   ```bash
+   node -e "console.log(require('node:crypto').createHash('sha256').update(process.argv[1]).digest('hex'))" "your new passphrase"
+   ```
+
+3. Copy the printed 64-character hex string into `src/config.js`, replacing
+   the value of `LOCKED_PASSWORD_HASH`.
+4. Commit only the hash. Never commit the plaintext passphrase in code,
+   commit messages, or docs.
+
+Rotating later is the same three steps with a new passphrase — the old one
+stops working as soon as the new hash ships.
 
 ## Development
 

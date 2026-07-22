@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { resolveRepo } from "../src/config.js";
+import { resolveRepo, EXCLUDED_FOLDERS } from "../src/config.js";
 
 async function inTempDir(pkgJson, fn) {
   const dir = await mkdtemp(join(tmpdir(), "promaster-cfg-"));
@@ -31,6 +31,10 @@ test("env PROMASTER_REPO wins over package.json", async () => {
     if (prev === undefined) delete process.env.PROMASTER_REPO;
     else process.env.PROMASTER_REPO = prev;
   }
+});
+
+test("locked folder is excluded (no gating logic in promaster)", () => {
+  assert.ok(EXCLUDED_FOLDERS.includes("locked"));
 });
 
 test("package.json used when env unset", async () => {

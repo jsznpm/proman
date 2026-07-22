@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { listMarkdown, lastCommitDate, listFolders } from "../src/github.js";
+import { listMarkdown, lastCommitDate, listFolders, listContents } from "../src/github.js";
 
 const ctx = { owner: "o", repo: "r", token: null };
 
@@ -76,6 +76,58 @@ test("listFolders returns [] on 404", async () => {
   );
   try {
     assert.deepEqual(await listFolders(ctx), []);
+  } finally {
+    restore();
+  }
+});
+
+test("listContents keeps dirs+.md files, drops non-md/dot-entries, dirs sort first", async () => {
+  const restore = mockFetch(async () =>
+    jsonResponse([
+      { type: "file", name: "b.md", path: "locked/b.md", download_url: "u/b" },
+      { type: "dir", name: "sub", path: "locked/sub" },
+      { type: "file", name: "notes.txt", path: "locked/notes.txt" },
+      { type: "dir", name: ".git", path: "locked/.git" },
+      { type: "file", name: "a.md", path: "locked/a.md", download_url: "u/a" },
+    ])
+  );
+  try {
+    const entries = await listContents("locked", ctx);
+    assert.deepEqual(
+      entries.map((e) => [e.type, e.name]),
+      [
+        ["dir", "sub"],
+        ["file", "a.md"],
+        ["file", "b.md"],
+      ]
+    );
+    assert.equal(entries.find((e) => e.type === "dir").download_url, null);
+  } finally {
+    restore();
+  }
+});
+
+test("listContents percent-encodes each path segment independently", async () => {
+  let capturedUrl;
+  const restore = mockFetch(async (url) => {
+    capturedUrl = url;
+    return jsonResponse([]);
+  });
+  try {
+    await listContents("locked/sub folder", ctx);
+    assert.ok(capturedUrl.endsWith("locked/sub%20folder"));
+    assert.ok(!capturedUrl.includes("%2F"));
+  } finally {
+    restore();
+  }
+});
+
+test("listContents returns [] on 404", async () => {
+  const restore = mockFetch(async () =>
+    jsonResponse({ message: "Not Found" }, { status: 404, statusText: "Not Found" })
+  );
+  try {
+    assert.deepEqual(await listContents("locked/missing", ctx), []);
   } finally {
     restore();
   }

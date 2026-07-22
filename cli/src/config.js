@@ -4,9 +4,11 @@ import { resolve } from "node:path";
 // Default content repo (this git repo). Override with PROMASTER_REPO if the repo name differs.
 const DEFAULT_REPO = "jsznpm/proman";
 
-// Top-level folders never shown as content categories (the CLI's own source).
+// Top-level folders never shown as content categories (the CLI's own source,
+// plus "locked" — password-gated in cli2/ubuligan only; promaster has no
+// gating logic so it never shows or serves this folder at all).
 // Dot-folders (.git, .github, ...) are skipped separately by listFolders.
-export const EXCLUDED_FOLDERS = ["cli", "cli2"];
+export const EXCLUDED_FOLDERS = ["cli", "cli2", "locked"];
 
 // Folder whose files hold a podcast link instead of Markdown to render.
 // Selecting such a file opens its link straight in the browser.

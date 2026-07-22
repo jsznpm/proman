@@ -41,6 +41,11 @@ export function fetchContent(file, ctx) {
  * Open a file in the browser. For podcast folders the file holds a link, which
  * is opened directly; otherwise the Markdown is rendered to a temporary HTML
  * file and opened. Returns { ok, msg } for status display.
+ *
+ * `folder` must be the top-level ancestor folder (pathStack[0] in app.js),
+ * not necessarily the file's immediate parent directory — a file nested
+ * several levels deep under a browsable folder still resolves the
+ * podcast-vs-HTML check against the folder the user originally entered.
  */
 export async function openInBrowserFromFile(file, folder, ctx) {
   ensureCleanupRegistered();

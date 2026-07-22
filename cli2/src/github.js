@@ -85,6 +85,42 @@ export async function listMarkdown(category, ctx) {
 }
 
 /**
+ * List a directory's immediate contents — both subdirectories and .md files,
+ * at any nesting depth. Unlike listMarkdown, `path` may be multi-segment
+ * (e.g. "locked/sub/deeper"); each segment is percent-encoded independently
+ * so an embedded "/" is never escaped as "%2F" (which the contents API
+ * rejects). Dirs sort before files; each group sorts alphabetically.
+ * Returns [{ type: "dir"|"file", name, path, download_url }] (download_url
+ * is null for dirs). Returns [] on 404.
+ */
+export async function listContents(path, ctx) {
+  const encodedPath = path
+    .split("/")
+    .filter(Boolean)
+    .map(encodeURIComponent)
+    .join("/");
+  const url = `${API}/repos/${ctx.owner}/${ctx.repo}/contents/${encodedPath}`;
+  let res;
+  try {
+    res = await request(url, ctx);
+  } catch (err) {
+    if (err instanceof HttpError && err.status === 404) return [];
+    throw err;
+  }
+  const items = await res.json();
+  if (!Array.isArray(items)) return [];
+  const dirs = items
+    .filter((it) => it.type === "dir" && !it.name.startsWith("."))
+    .map((it) => ({ type: "dir", name: it.name, path: it.path, download_url: null }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const files = items
+    .filter((it) => it.type === "file" && it.name.endsWith(".md"))
+    .map((it) => ({ type: "file", name: it.name, path: it.path, download_url: it.download_url }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  return [...dirs, ...files];
+}
+
+/**
  * Last commit date (ms epoch) touching a path. Returns 0 on failure.
  */
 export async function lastCommitDate(path, ctx) {
